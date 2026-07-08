@@ -1,0 +1,14 @@
+# Configuración de despliegue en Netlify para la SPA (Vite + React Router).
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+# Reescribe todas las rutas al index para que el enrutado del lado del cliente
+# (p. ej. /inventario, /compra) no devuelva 404 al recargar o compartir enlace.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
