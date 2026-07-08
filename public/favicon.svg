@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="512" y2="512" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#141317"/>
+      <stop offset="1" stop-color="#0B0B0D"/>
+    </linearGradient>
+    <linearGradient id="fang" x1="256" y1="120" x2="256" y2="400" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#C81E2A"/>
+      <stop offset="0.55" stop-color="#B0121B"/>
+      <stop offset="1" stop-color="#5B0E14"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="116" fill="url(#bg)"/>
+  <rect x="6" y="6" width="500" height="500" rx="110" fill="none" stroke="#232026" stroke-width="4"/>
+  <!-- Colmillo / gota: silueta elegante que apunta hacia abajo -->
+  <path d="M256 132
+           C 210 132 176 168 176 214
+           C 176 266 214 306 240 356
+           C 249 373 253 388 256 402
+           C 259 388 263 373 272 356
+           C 298 306 336 266 336 214
+           C 336 168 302 132 256 132 Z"
+        fill="url(#fang)"/>
+  <!-- Brillo sutil -->
+  <path d="M232 176 C 214 190 206 208 208 232 C 224 214 236 196 244 180 C 240 178 236 177 232 176 Z"
+        fill="#F5F1E9" opacity="0.14"/>
+</svg>
