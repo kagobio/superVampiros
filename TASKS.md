@@ -115,10 +115,11 @@ fase nueva sin cerrar (terminar + probar + revisar) la anterior. Leyenda:
 - [x] Utilidades `download` y `csv` (parser/serializer RFC 4180 básico, sin dependencias).
 - [x] Tests: round-trip JSON, last-write-wins, rechazo de formato, import CSV (crear/actualizar).
 
-### Pendiente de pulido (arrastrado a un pase final)
-- [ ] Pase de accesibilidad exhaustivo (auditoría de foco/contraste/teclado en todas las pantallas).
-- [ ] Microinteracciones adicionales (Framer Motion) y estados vacíos aún más cuidados.
-- [ ] Iconos PWA en PNG (192/512) definitivos + captura para stores (hoy: icono SVG).
+### ✅ Pase de pulido final (COMPLETADO)
+- [x] Iconos PWA en PNG (192/512, any + maskable) + apple-touch-icon, generados desde el SVG con `sharp` (`npm run icons`); manifest actualizado.
+- [x] Accesibilidad: enlace "Saltar al contenido", `main` enfocable y **foco al contenido al cambiar de ruta** (mejor para lectores de pantalla y teclado).
+- [x] Microinteracciones: transición de página (fade) con Framer Motion respetando `prefers-reduced-motion`; feedback táctil (`active:scale`) en botones.
+- [ ] (Opcional futuro) Auditoría de contraste automatizada y captura para stores.
 
 ---
 
