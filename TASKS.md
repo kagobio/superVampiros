@@ -125,11 +125,11 @@ fase nueva sin cerrar (terminar + probar + revisar) la anterior. Leyenda:
 
 ## Fase 7 — Avanzado
 
-- [x] **Sincronización entre dispositivos por clave de hogar** (Supabase, tiempo real):
-  - Auth anónima + `join_household(secret)` (solo se guarda el hash de la clave).
-  - Tabla genérica `documents` + RLS por pertenencia; replicación LWW (`updatedAt`/`revision`, tombstones) reutilizando la política del importador.
-  - Motor de sync: pull+push inicial, realtime, hooks de Dexie para cambios locales (con anti-eco). UI en Ajustes (generar/copiar clave, estado, desactivar).
-  - Esquema en [`supabase/schema.sql`](./supabase/schema.sql); config por `VITE_SUPABASE_URL`/`VITE_SUPABASE_ANON_KEY`. Tests de reconciliación LWW.
+- [x] **Sincronización entre dispositivos por clave de hogar** (Firebase/Firestore, tiempo real):
+  - Auth anónima; `householdId = SHA-256(clave)` (la clave nunca sale del dispositivo).
+  - Colección `households/{id}/docs` + reglas de Firestore; replicación LWW (`updatedAt`/`revision`, tombstones) reutilizando la política del importador.
+  - Motor de sync: pull+push inicial, `onSnapshot` en tiempo real, hooks de Dexie para cambios locales (con anti-eco). UI en Ajustes (generar/copiar clave, estado, desactivar).
+  - Reglas en [`firebase/firestore.rules`](./firebase/firestore.rules); config por `VITE_FIREBASE_*`. Tests de reconciliación LWW.
 - [ ] Compartir inventario con otros hogares.
 - [ ] Escáner de códigos de barras.
 - [ ] OCR de tickets de compra.

@@ -5,7 +5,7 @@ import { applyTheme, useThemeStore } from '@/stores/theme.store';
 import { ensureSeeded } from '@/services/bootstrap/seed.service';
 import { isSyncConfigured } from '@/config/env';
 import { useSyncStore } from '@/stores/sync.store';
-import { connectSync } from '@/persistence/sync/sync-engine';
+import { connectSync } from '@/persistence/sync';
 
 export function App() {
   const preference = useThemeStore((s) => s.preference);

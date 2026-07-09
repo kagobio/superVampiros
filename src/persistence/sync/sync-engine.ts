@@ -1,14 +1,26 @@
-import type { RealtimeChannel } from '@supabase/supabase-js';
+import { signInAnonymously } from 'firebase/auth';
+import {
+  collection,
+  doc,
+  getDocs,
+  onSnapshot,
+  writeBatch,
+  type CollectionReference,
+} from 'firebase/firestore';
 import type { Entity } from '@/domain/shared/entity';
-import { getSupabase } from './supabase-client';
+import { getDb, getFirebaseAuth } from './firebase-client';
 import { SYNCED_TABLES } from './synced-tables';
-import { shouldApplyIncoming, toDocument, type SyncDocument } from './reconcile';
+import {
+  docId,
+  householdIdFromKey,
+  shouldApplyIncoming,
+  toDocument,
+  type SyncDocument,
+} from './reconcile';
 import { useSyncStore } from '@/stores/sync.store';
 
-const DOCUMENTS = 'documents';
-
-let householdId: string | null = null;
-let channel: RealtimeChannel | null = null;
+let colRef: CollectionReference | null = null;
+let unsubscribe: (() => void) | null = null;
 /** Evita el "eco": no reenviar al servidor los cambios que vienen del servidor. */
 let applyingRemote = false;
 /** Handlers de los hooks de Dexie, para poder quitarlos al desconectar. */
@@ -18,10 +30,10 @@ const status = () => useSyncStore.getState();
 
 /** Aplica un documento remoto al Dexie local con política last-write-wins. */
 async function applyRemoteDoc(row: SyncDocument): Promise<void> {
-  const table = SYNCED_TABLES[row.entity_type];
-  if (!table) return;
-  const local = await table.get(row.entity_id);
-  if (!shouldApplyIncoming(local, { updatedAt: row.updated_at, revision: row.revision })) return;
+  const table = SYNCED_TABLES[row.entityType];
+  if (!table || !row.doc) return;
+  const local = await table.get(row.entityId);
+  if (!shouldApplyIncoming(local, { updatedAt: row.updatedAt, revision: row.revision })) return;
   applyingRemote = true;
   try {
     await table.put(row.doc);
@@ -30,17 +42,17 @@ async function applyRemoteDoc(row: SyncDocument): Promise<void> {
   }
 }
 
-/** Sube una entidad local a la tabla `documents` (upsert). */
+/** Sube una entidad local a Firestore. */
 async function pushEntity(entityType: string, entity: Entity): Promise<void> {
-  const supabase = getSupabase();
-  if (!supabase || !householdId) return;
-  const { error } = await supabase
-    .from(DOCUMENTS)
-    .upsert(toDocument(householdId, entityType, entity), {
-      onConflict: 'household_id,entity_type,entity_id',
-    });
-  if (error) status().setStatus('error', error.message);
-  else status().markSynced();
+  if (!colRef) return;
+  try {
+    const batch = writeBatch(colRef.firestore);
+    batch.set(doc(colRef, docId(entityType, entity.id)), toDocument(entityType, entity));
+    await batch.commit();
+    status().markSynced();
+  } catch (e) {
+    status().setStatus('error', e instanceof Error ? e.message : 'Error al sincronizar');
+  }
 }
 
 /** Registra hooks en las tablas sincronizadas para propagar los cambios locales. */
@@ -63,71 +75,60 @@ function detachHooks(): void {
   while (hookHandles.length) hookHandles.pop()?.();
 }
 
-/** Reconciliación inicial: baja lo remoto (LWW) y sube lo local. */
+/** Reconciliación inicial: baja lo remoto (LWW) y luego sube lo local. */
 async function initialSync(): Promise<void> {
-  const supabase = getSupabase();
-  if (!supabase || !householdId) return;
+  if (!colRef) return;
 
-  const { data, error } = await supabase
-    .from(DOCUMENTS)
-    .select('*')
-    .eq('household_id', householdId);
-  if (error) throw new Error(error.message);
-  for (const row of (data ?? []) as SyncDocument[]) await applyRemoteDoc(row);
+  const snapshot = await getDocs(colRef);
+  for (const d of snapshot.docs) await applyRemoteDoc(d.data() as SyncDocument);
 
-  const docs: SyncDocument[] = [];
+  let batch = writeBatch(colRef.firestore);
+  let count = 0;
   for (const [entityType, table] of Object.entries(SYNCED_TABLES)) {
     const rows = (await table.toArray()) as Entity[];
-    for (const entity of rows) docs.push(toDocument(householdId, entityType, entity));
+    for (const entity of rows) {
+      batch.set(doc(colRef, docId(entityType, entity.id)), toDocument(entityType, entity));
+      count++;
+      // Firestore limita a 500 operaciones por lote.
+      if (count % 400 === 0) {
+        await batch.commit();
+        batch = writeBatch(colRef.firestore);
+      }
+    }
   }
-  if (docs.length > 0) {
-    const { error: upErr } = await supabase
-      .from(DOCUMENTS)
-      .upsert(docs, { onConflict: 'household_id,entity_type,entity_id' });
-    if (upErr) throw new Error(upErr.message);
-  }
+  if (count % 400 !== 0) await batch.commit();
 }
 
-/** Suscripción realtime: aplica los cambios remotos según llegan. */
+/** Suscripción en tiempo real: aplica los cambios remotos según llegan. */
 function subscribeRealtime(): void {
-  const supabase = getSupabase();
-  if (!supabase || !householdId) return;
-  channel = supabase
-    .channel(`documents-${householdId}`)
-    .on(
-      'postgres_changes',
-      { event: '*', schema: 'public', table: DOCUMENTS, filter: `household_id=eq.${householdId}` },
-      (payload) => {
-        const row = payload.new as SyncDocument | undefined;
-        if (row?.doc) void applyRemoteDoc(row);
-      },
-    )
-    .subscribe();
+  if (!colRef) return;
+  unsubscribe = onSnapshot(colRef, (snap) => {
+    snap.docChanges().forEach((change) => {
+      // Ignora los ecos de nuestras propias escrituras pendientes.
+      if (change.doc.metadata.hasPendingWrites) return;
+      if (change.type === 'removed') return;
+      void applyRemoteDoc(change.doc.data() as SyncDocument);
+    });
+    status().markSynced();
+  });
 }
 
 /**
- * Conecta la sincronización: inicia sesión anónima, se une al hogar con la clave,
- * hace la reconciliación inicial y se suscribe a los cambios en tiempo real.
+ * Conecta la sincronización: sesión anónima, deriva el hogar de la clave, hace
+ * la reconciliación inicial y se suscribe a los cambios en tiempo real.
  */
 export async function connectSync(householdKey: string): Promise<void> {
-  const supabase = getSupabase();
-  if (!supabase) {
+  const auth = getFirebaseAuth();
+  const db = getDb();
+  if (!auth || !db) {
     status().setStatus('error', 'Sincronización no configurada.');
     return;
   }
   status().setStatus('connecting');
   try {
-    const { data: sessionData } = await supabase.auth.getSession();
-    if (!sessionData.session) {
-      const { error } = await supabase.auth.signInAnonymously();
-      if (error) throw new Error(error.message);
-    }
-
-    const { data: hid, error: rpcErr } = await supabase.rpc('join_household', {
-      secret: householdKey,
-    });
-    if (rpcErr) throw new Error(rpcErr.message);
-    householdId = hid as string;
+    if (!auth.currentUser) await signInAnonymously(auth);
+    const householdId = await householdIdFromKey(householdKey);
+    colRef = collection(db, 'households', householdId, 'docs');
 
     await initialSync();
     attachHooks();
@@ -141,10 +142,10 @@ export async function connectSync(householdKey: string): Promise<void> {
 /** Detiene la sincronización (mantiene la sesión para reconectar rápido). */
 export async function disconnectSync(): Promise<void> {
   detachHooks();
-  if (channel) {
-    await getSupabase()?.removeChannel(channel);
-    channel = null;
+  if (unsubscribe) {
+    unsubscribe();
+    unsubscribe = null;
   }
-  householdId = null;
+  colRef = null;
   status().setStatus('off');
 }

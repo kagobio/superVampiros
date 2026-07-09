@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Check, Copy, RefreshCw, Wifi, WifiOff } from 'lucide-react';
 import { isSyncConfigured } from '@/config/env';
-import { connectSync, disconnectSync } from '@/persistence/sync/sync-engine';
+import { connectSync, disconnectSync } from '@/persistence/sync';
 import { generateHouseholdKey, useSyncStore } from '@/stores/sync.store';
 import { toast } from '@/stores/toast.store';
 import { Button } from '@/components/ui/Button';
@@ -20,8 +20,8 @@ export function SyncSection() {
       <section className="space-y-2">
         <h2 className="text-sm font-medium text-text">Sincronización</h2>
         <p className="rounded-2xl border border-border bg-surface p-3 text-sm text-muted">
-          Aún no está configurada. Necesita las variables <code>VITE_SUPABASE_URL</code> y{' '}
-          <code>VITE_SUPABASE_ANON_KEY</code> (ver <code>README</code>).
+          Aún no está configurada. Necesita las credenciales de Firebase (
+          <code>VITE_FIREBASE_*</code>, ver <code>README</code>).
         </p>
       </section>
     );

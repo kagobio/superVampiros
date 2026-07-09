@@ -27,14 +27,13 @@ describe('shouldApplyIncoming', () => {
 });
 
 describe('toDocument', () => {
-  it('mapea una entidad a una fila de documents', () => {
+  it('mapea una entidad a un documento de sincronización', () => {
     const entity = { ...baseEntity('abc', 123), updatedAt: 123, revision: 1 };
-    const doc = toDocument('house-1', 'product', entity);
+    const doc = toDocument('product', entity);
     expect(doc).toMatchObject({
-      household_id: 'house-1',
-      entity_type: 'product',
-      entity_id: 'abc',
-      updated_at: 123,
+      entityType: 'product',
+      entityId: 'abc',
+      updatedAt: 123,
       revision: 1,
     });
     expect(doc.doc).toBe(entity);

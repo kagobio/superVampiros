@@ -1,12 +1,11 @@
 import type { Entity } from '@/domain/shared/entity';
 
-/** Fila de la tabla `documents` de Supabase. */
+/** Documento de sincronización tal y como se guarda en Firestore. */
 export interface SyncDocument {
-  household_id: string;
-  entity_type: string;
-  entity_id: string;
+  entityType: string;
+  entityId: string;
   doc: Entity;
-  updated_at: number;
+  updatedAt: number;
   revision: number;
 }
 
@@ -24,14 +23,31 @@ export function shouldApplyIncoming(
   return incoming.revision > local.revision;
 }
 
-/** Construye la fila `documents` a partir de una entidad local. */
-export function toDocument(householdId: string, entityType: string, entity: Entity): SyncDocument {
+/** Construye el documento de sincronización a partir de una entidad local. */
+export function toDocument(entityType: string, entity: Entity): SyncDocument {
   return {
-    household_id: householdId,
-    entity_type: entityType,
-    entity_id: entity.id,
+    entityType,
+    entityId: entity.id,
     doc: entity,
-    updated_at: entity.updatedAt,
+    updatedAt: entity.updatedAt,
     revision: entity.revision,
   };
+}
+
+/** Id de documento estable a partir del tipo y el id de la entidad. */
+export function docId(entityType: string, entityId: string): string {
+  return `${entityType}__${entityId}`;
+}
+
+/**
+ * Deriva el identificador de hogar (hex SHA-256) a partir de la clave secreta.
+ * Es determinista e imposible de adivinar: quien no tenga la clave no puede
+ * calcular el id y, por tanto, no accede a los datos del hogar.
+ */
+export async function householdIdFromKey(key: string): Promise<string> {
+  const bytes = new TextEncoder().encode(key.trim());
+  const hash = await crypto.subtle.digest('SHA-256', bytes);
+  return Array.from(new Uint8Array(hash))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
 }
