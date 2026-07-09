@@ -62,7 +62,8 @@ create or replace function public.join_household(secret text)
 returns uuid
 language plpgsql
 security definer
-set search_path = public
+-- Incluimos `extensions` para encontrar digest() (pgcrypto) en Supabase.
+set search_path = public, extensions
 as $$
 declare
   h_id uuid;
@@ -85,7 +86,13 @@ $$;
 
 grant execute on function public.join_household(text) to anon, authenticated;
 
+-- Permisos de tabla (el acceso real lo restringe la RLS de arriba).
+grant usage on schema public to anon, authenticated;
+grant select, insert, update, delete on public.documents to anon, authenticated;
+grant select on public.memberships to anon, authenticated;
+
 -- Publica la tabla de documentos en realtime (para recibir cambios al instante).
+-- Si al re-ejecutar da "already member of publication", puedes ignorarlo.
 alter publication supabase_realtime add table public.documents;
 
 -- IMPORTANTE (una vez, en el panel):
