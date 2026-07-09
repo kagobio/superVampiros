@@ -105,15 +105,20 @@ fase nueva sin cerrar (terminar + probar + revisar) la anterior. Leyenda:
 
 ---
 
-## Fase 6 — Import/Export + Ajustes + Pulido  `[~ siguiente]`
+## ✅ Fase 6 — Import/Export + Ajustes  (COMPLETADA)
 
-- [ ] Export JSON y CSV (todas las entidades) validado con Zod.
-- [ ] Import JSON/CSV con validación y estrategia de merge (por ULID/tombstones).
-- [ ] Stub de backups automáticos (interfaz lista, sin implementar).
-- [ ] Pantalla de Ajustes completa (tema, umbral de caducidad, unidad por defecto, taxonomías, datos).
-- [ ] Pase de accesibilidad (foco, ARIA, contraste, teclado) y de rendimiento (virtualización, memo).
-- [ ] Microinteracciones (Framer Motion) y estados vacíos elegantes.
-- [ ] Iconos PWA en PNG (192/512) definitivos + captura para stores.
+- [x] Export **JSON** completo (todas las entidades, incluidos tombstones) + export **CSV** de productos (nombres legibles).
+- [x] Import **JSON** con validación Zod (del sobre) y **merge last-write-wins** por `updatedAt`/`revision` respetando tombstones (misma política que la sync futura).
+- [x] Import **CSV** de productos: empareja categoría/ubicación/unidad/etiquetas por nombre (crea las que falten) y actualiza el producto si ya existe.
+- [x] Stub de backups automáticos (`BackupAdapter` + `noopBackupAdapter`).
+- [x] Pantalla de **Ajustes**: tema (oscuro/claro/sistema), umbral de caducidad, unidad por defecto, datos (export/import) y "borrar todo".
+- [x] Utilidades `download` y `csv` (parser/serializer RFC 4180 básico, sin dependencias).
+- [x] Tests: round-trip JSON, last-write-wins, rechazo de formato, import CSV (crear/actualizar).
+
+### Pendiente de pulido (arrastrado a un pase final)
+- [ ] Pase de accesibilidad exhaustivo (auditoría de foco/contraste/teclado en todas las pantallas).
+- [ ] Microinteracciones adicionales (Framer Motion) y estados vacíos aún más cuidados.
+- [ ] Iconos PWA en PNG (192/512) definitivos + captura para stores (hoy: icono SVG).
 
 ---
 

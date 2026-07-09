@@ -38,7 +38,8 @@ npm run test:watch   # Vitest (watch)
 
 ## Estado
 
-**Fases 0–5 completadas** (fundaciones + inventario núcleo + dashboard/filtros/
+**Fases 0–6 completadas** (fundaciones + inventario núcleo + dashboard/filtros/
 favoritos + caducidad y lista de la compra automática + historial y estadísticas
-+ recetas y packs). Siguiente: Fase 6 — importar/exportar, ajustes y pulido. Ver
-[`TASKS.md`](./TASKS.md) para el detalle por fases.
++ recetas y packs + importar/exportar JSON-CSV y ajustes). Queda un pase final de
+pulido (accesibilidad, microinteracciones, iconos PWA) y la Fase 7 (arquitectura
+futura). Ver [`TASKS.md`](./TASKS.md) para el detalle por fases.
