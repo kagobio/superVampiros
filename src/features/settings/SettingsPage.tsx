@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/Button';
 import { Select } from '@/components/ui/Select';
 import { datedFilename, downloadText } from '@/lib/download';
 import { cn } from '@/lib/cn';
+import { SyncSection } from './components/SyncSection';
 
 const THEMES: { id: ThemePreference; label: string; icon: typeof Sun }[] = [
   { id: 'dark', label: 'Oscuro', icon: Moon },
@@ -172,6 +173,8 @@ export function SettingsPage() {
           pasarlos a otro móvil.
         </p>
       </section>
+
+      <SyncSection />
 
       {/* Zona de peligro */}
       <section className="space-y-2">

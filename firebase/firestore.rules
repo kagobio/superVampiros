@@ -1,0 +1,17 @@
+rules_version = '2';
+
+// Reglas de seguridad de Firestore para la sincronización de Alimentos Vampíricos.
+// Pégalas en: Firebase Console → Firestore Database → Reglas → Publicar.
+//
+// Modelo: los datos de cada hogar viven bajo households/{householdId}/docs.
+// El `householdId` es el SHA-256 de la clave del hogar (se calcula en el cliente),
+// así que es imposible de adivinar: quien no tiene la clave no puede acceder.
+// Se exige sesión iniciada (anónima) para escribir/leer.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /households/{householdId}/docs/{docId} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}

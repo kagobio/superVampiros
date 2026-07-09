@@ -36,10 +36,28 @@ npm run test         # Vitest (run)
 npm run test:watch   # Vitest (watch)
 ```
 
+## Sincronización entre dispositivos (opcional)
+
+Local-first por defecto. Para compartir el inventario entre varios móviles con
+**tiempo real** mediante **Firebase (Firestore)**, sin cuentas: solo una clave de
+hogar.
+
+1. Crea un proyecto en [console.firebase.google.com](https://console.firebase.google.com).
+2. **Firestore Database → Crear base de datos** (modo producción, la región que quieras).
+3. **Firestore Database → Reglas** → pega [`firebase/firestore.rules`](./firebase/firestore.rules) → **Publicar**.
+4. **Authentication → Sign-in method** → habilita **Anónimo**.
+5. **Configuración del proyecto → Tus apps → Web (`</>`)**: registra una app web y copia
+   los valores de `firebaseConfig` (`apiKey`, `authDomain`, `projectId`, `appId`).
+6. Ponlos en `.env.local` (ver [`.env.example`](./.env.example)) para desarrollo y en
+   **Netlify → Environment variables** para producción.
+7. En la app: **Más → Ajustes → Sincronización**, genera una clave y actívala;
+   introduce la **misma clave** en el otro dispositivo.
+
+El `householdId` es el SHA-256 de la clave (imposible de adivinar). Los datos se
+replican con la política _last-write-wins_ (`updatedAt`/`revision`, tombstones) ya
+usada por importar/exportar.
+
 ## Estado
 
-**Fases 0–6 completadas** (fundaciones + inventario núcleo + dashboard/filtros/
-favoritos + caducidad y lista de la compra automática + historial y estadísticas
-+ recetas y packs + importar/exportar JSON-CSV y ajustes). Queda un pase final de
-pulido (accesibilidad, microinteracciones, iconos PWA) y la Fase 7 (arquitectura
-futura). Ver [`TASKS.md`](./TASKS.md) para el detalle por fases.
+**Fases 0–6 completadas** + **sincronización (Fase 7)** con Firebase/Firestore en
+tiempo real. Ver [`TASKS.md`](./TASKS.md) para el detalle por fases.
