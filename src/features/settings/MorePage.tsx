@@ -64,8 +64,20 @@ export function MorePage() {
       description: 'Compras recurrentes que añades de un toque.',
       ready: true,
     },
-    { icon: Download, label: 'Importar / Exportar', description: 'JSON y CSV. (Fase 6)' },
-    { icon: Settings, label: 'Ajustes', description: 'Preferencias generales. (Fase 6)' },
+    {
+      to: '/ajustes',
+      icon: Download,
+      label: 'Importar / Exportar',
+      description: 'Copia de seguridad JSON y productos en CSV.',
+      ready: true,
+    },
+    {
+      to: '/ajustes',
+      icon: Settings,
+      label: 'Ajustes',
+      description: 'Tema, caducidad, unidad por defecto y datos.',
+      ready: true,
+    },
   ];
 
   return (
