@@ -163,7 +163,7 @@ export function ProductForm({
         />
       </div>
 
-      <Field label="Color" hint="Se usa en el monograma del producto">
+      <Field label="Color" hint="Para identificar el producto">
         {() => (
           <Controller
             control={control}
