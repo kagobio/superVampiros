@@ -5,8 +5,10 @@ import { computeStats } from './inventory-stats';
 import {
   applyInventoryView,
   EMPTY_FILTERS,
+  groupProductsByCategory,
   hasActiveFilters,
   matchesExpiryWindow,
+  UNCATEGORIZED_ID,
 } from './inventory-view';
 
 const DAY = 24 * 60 * 60 * 1000;
@@ -50,6 +52,43 @@ describe('computeStats', () => {
     expect(stats.expired).toBe(1);
     expect(stats.favorites).toBe(1);
     expect(stats.recent).toBeGreaterThanOrEqual(1);
+  });
+});
+
+describe('groupProductsByCategory', () => {
+  const categories = [
+    { id: 'carne', name: 'Carne', color: '#a00', order: 1 },
+    { id: 'lacteos', name: 'Lácteos', color: '#00a', order: 0 },
+  ];
+
+  it('agrupa en el orden de las categorías y pone "sin categoría" al final', () => {
+    const products = [
+      product({ id: 'p1', name: 'Pollo', categoryId: 'carne' }),
+      product({ id: 'p2', name: 'Leche', categoryId: 'lacteos' }),
+      product({ id: 'p3', name: 'Suelto', categoryId: null }),
+    ];
+    const groups = groupProductsByCategory(products, categories);
+    expect(groups.map((g) => g.id)).toEqual(['lacteos', 'carne', UNCATEGORIZED_ID]);
+    expect(groups[2]?.name).toBe('Sin categoría');
+  });
+
+  it('omite grupos vacíos y trata una categoría inexistente como sin categoría', () => {
+    const products = [
+      product({ id: 'p1', name: 'Leche', categoryId: 'lacteos' }),
+      product({ id: 'p2', name: 'Fantasma', categoryId: 'borrada' }),
+    ];
+    const groups = groupProductsByCategory(products, categories);
+    expect(groups.map((g) => g.id)).toEqual(['lacteos', UNCATEGORIZED_ID]);
+    expect(groups[1]?.products.map((p) => p.id)).toEqual(['p2']);
+  });
+
+  it('conserva el orden de entrada de los productos dentro de un grupo', () => {
+    const products = [
+      product({ id: 'b', name: 'B', categoryId: 'carne' }),
+      product({ id: 'a', name: 'A', categoryId: 'carne' }),
+    ];
+    const groups = groupProductsByCategory(products, categories);
+    expect(groups[0]?.products.map((p) => p.id)).toEqual(['b', 'a']);
   });
 });
 

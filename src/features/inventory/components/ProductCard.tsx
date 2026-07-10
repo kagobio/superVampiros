@@ -2,7 +2,6 @@ import { memo } from 'react';
 import { Star } from 'lucide-react';
 import type { Product } from '@/domain/product/product.types';
 import { expiryStatus, stockStatus } from '@/domain/product/product.rules';
-import { ProductAvatar } from '@/components/ui/ProductAvatar';
 import { Stepper } from '@/components/ui/Stepper';
 import { cn } from '@/lib/cn';
 
@@ -42,7 +41,6 @@ function ProductCardBase({
         onClick={() => onOpen(product)}
         className="flex min-w-0 flex-1 items-center gap-3 text-left"
       >
-        <ProductAvatar icon={product.icon} color={product.color} name={product.name} />
         <span className="min-w-0 flex-1">
           <span className="flex items-center gap-1.5">
             <span

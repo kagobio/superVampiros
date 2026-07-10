@@ -3,6 +3,7 @@ import { PackageOpen, ScanBarcode, SearchX, ShoppingCart } from 'lucide-react';
 import type { Product } from '@/domain/product/product.types';
 import {
   applyInventoryView,
+  groupProductsByCategory,
   hasActiveFilters,
   type InventoryFilters,
 } from '@/domain/inventory/inventory-view';
@@ -20,7 +21,7 @@ import { useSettings } from '@/hooks/useSettings';
 import { useFiltersStore } from '@/stores/filters.store';
 import { ScannerSheet } from '@/features/scan/ScannerSheet';
 import { useProducts } from './hooks/useProducts';
-import { ProductList } from './components/ProductList';
+import { GroupedProductList } from './components/GroupedProductList';
 import { ProductFormSheet } from './components/ProductFormSheet';
 import { FilterBar } from './components/FilterBar';
 
@@ -46,18 +47,14 @@ export function InventoryPage() {
   const [now] = useState(() => Date.now());
 
   const unitById = useMemo(() => new Map(units.map((u) => [u.id, u.abbreviation])), [units]);
-  const categoryById = useMemo(() => new Map(categories.map((c) => [c.id, c.name])), [categories]);
   const locationById = useMemo(() => new Map(locations.map((l) => [l.id, l.name])), [locations]);
 
+  // La categoría ya es la cabecera de cada sección, así que el subtítulo de la
+  // tarjeta solo muestra la ubicación (si la tiene).
   const subtitleFor = useMemo(
-    () => (product: Product) => {
-      const parts = [
-        product.categoryId ? categoryById.get(product.categoryId) : undefined,
-        product.locationId ? locationById.get(product.locationId) : undefined,
-      ].filter(Boolean);
-      return parts.join(' · ');
-    },
-    [categoryById, locationById],
+    () => (product: Product) =>
+      product.locationId ? (locationById.get(product.locationId) ?? '') : '',
+    [locationById],
   );
 
   const view: InventoryFilters = {
@@ -85,6 +82,11 @@ export function InventoryPage() {
       now,
       settings.expirySoonDays,
     ],
+  );
+
+  const grouped = useMemo(
+    () => groupProductsByCategory(filtered, categories),
+    [filtered, categories],
   );
 
   const openCreate = () => {
@@ -197,8 +199,8 @@ export function InventoryPage() {
           />
         )
       ) : (
-        <ProductList
-          products={filtered}
+        <GroupedProductList
+          groups={grouped}
           unitById={unitById}
           subtitleFor={subtitleFor}
           now={now}

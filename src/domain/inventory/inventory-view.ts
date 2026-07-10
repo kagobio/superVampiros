@@ -1,5 +1,6 @@
 import type { Timestamp } from '@/domain/shared/time';
 import type { Product } from '@/domain/product/product.types';
+import type { Category } from '@/domain/category/category.types';
 import { calendarDaysUntil, needsRestock, stockStatus } from '@/domain/product/product.rules';
 
 /** Filtros rápidos combinables de stock/favoritos (se aplican en conjunción: AND). */
@@ -144,4 +145,48 @@ export function applyInventoryView(
   });
 
   return filtered.sort((a, b) => compare(a, b, filters.sort));
+}
+
+/** Id sintético del grupo de productos sin categoría (o con una ya borrada). */
+export const UNCATEGORIZED_ID = '__none__';
+
+/** Un grupo de productos que comparten categoría, para mostrarlo en secciones. */
+export interface ProductGroup {
+  id: string;
+  name: string;
+  color: string | null;
+  products: Product[];
+}
+
+/**
+ * Agrupa los productos por categoría, respetando el orden configurado de las
+ * categorías. Los que no tienen categoría (o apuntan a una ya borrada) van al
+ * final en un grupo "Sin categoría". Los grupos vacíos se omiten. Función pura:
+ * conserva el orden de entrada de los productos dentro de cada grupo.
+ */
+export function groupProductsByCategory(
+  products: Product[],
+  categories: Pick<Category, 'id' | 'name' | 'color' | 'order'>[],
+): ProductGroup[] {
+  const metaById = new Map(categories.map((c) => [c.id, c]));
+  const buckets = new Map<string, Product[]>();
+  for (const p of products) {
+    const key = p.categoryId && metaById.has(p.categoryId) ? p.categoryId : UNCATEGORIZED_ID;
+    const bucket = buckets.get(key);
+    if (bucket) bucket.push(p);
+    else buckets.set(key, [p]);
+  }
+
+  const groups: ProductGroup[] = [];
+  for (const c of [...categories].sort((a, b) => a.order - b.order)) {
+    const prods = buckets.get(c.id);
+    if (prods && prods.length > 0) {
+      groups.push({ id: c.id, name: c.name, color: c.color, products: prods });
+    }
+  }
+  const none = buckets.get(UNCATEGORIZED_ID);
+  if (none && none.length > 0) {
+    groups.push({ id: UNCATEGORIZED_ID, name: 'Sin categoría', color: null, products: none });
+  }
+  return groups;
 }
