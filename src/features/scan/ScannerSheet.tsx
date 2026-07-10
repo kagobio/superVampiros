@@ -63,13 +63,13 @@ export function ScannerSheet({ open, onClose, onDetected }: ScannerSheetProps) {
       </div>
 
       <div className="relative flex-1 overflow-hidden">
-        <video ref={videoRef} className="h-full w-full object-cover" muted playsInline />
+        <video ref={videoRef} className="h-full w-full object-cover" autoPlay muted playsInline />
         {/* Guía visual de encuadre */}
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
           <div className="h-40 w-72 rounded-2xl border-2 border-white/80 shadow-[0_0_0_9999px_rgba(0,0,0,0.35)]" />
         </div>
         <p className="absolute inset-x-0 bottom-10 px-6 text-center text-sm text-white/90">
-          {error ?? 'Apunta al código de barras del producto'}
+          {error ?? 'Acerca el código de barras a la cámara con buena luz'}
         </p>
       </div>
     </div>
