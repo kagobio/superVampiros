@@ -1,36 +1,41 @@
-import { Package } from 'lucide-react';
 import { cn } from '@/lib/cn';
 
 interface ProductAvatarProps {
-  icon: string;
+  /** Se conserva por compatibilidad; ya no se usa (se muestra un monograma). */
+  icon?: string;
   color: string;
   name: string;
   size?: 'sm' | 'md';
 }
 
-/** Detecta si el icono es un emoji (cualquier carácter fuera del ASCII imprimible). */
-function isEmoji(icon: string): boolean {
-  return icon.length > 0 && /[^ -~]/.test(icon);
+/** Inicial del producto en mayúscula (o '·' si no hay nombre). */
+function initial(name: string): string {
+  const c = name.trim().charAt(0);
+  return c ? c.toUpperCase() : '·';
 }
 
 /**
- * Avatar del producto: cuadrado redondeado teñido con su color, mostrando su
- * emoji si lo tiene o un icono por defecto. (El IconPicker llegará en Fase 6.)
+ * Avatar del producto: un monograma elegante (la inicial en el color del
+ * producto sobre una superficie sutil). Sustituye a los emojis por una estética
+ * más sobria y profesional.
  */
-export function ProductAvatar({ icon, color, name, size = 'md' }: ProductAvatarProps) {
-  const box = size === 'sm' ? 'h-9 w-9 text-lg' : 'h-11 w-11 text-xl';
+export function ProductAvatar({ color, name, size = 'md' }: ProductAvatarProps) {
+  const box = size === 'sm' ? 'h-9 w-9 text-sm' : 'h-11 w-11 text-base';
   return (
     <span
       aria-hidden="true"
-      className={cn('flex shrink-0 items-center justify-center rounded-xl', box)}
-      style={{ backgroundColor: `${color}22`, color }}
       title={name}
-    >
-      {isEmoji(icon) ? (
-        <span className="leading-none">{icon}</span>
-      ) : (
-        <Package size={size === 'sm' ? 18 : 20} />
+      className={cn(
+        'flex shrink-0 items-center justify-center rounded-xl border font-display font-medium',
+        box,
       )}
+      style={{
+        color,
+        backgroundColor: `${color}14`,
+        borderColor: `${color}33`,
+      }}
+    >
+      {initial(name)}
     </span>
   );
 }

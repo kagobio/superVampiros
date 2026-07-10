@@ -23,9 +23,10 @@ function ExpiryHint({ control, now }: { control: Control<ProductFormValues>; now
   if (ts == null) return null;
   const days = calendarDaysUntil(ts, now);
   const tone = days < 0 ? 'text-danger' : days <= 3 ? 'text-warning' : 'text-success';
+  const dot = days < 0 ? 'bg-danger' : days <= 3 ? 'bg-warning' : 'bg-success';
   return (
-    <p className={cn('text-xs', tone)}>
-      <span aria-hidden="true">{days < 0 ? '🔴' : days <= 3 ? '🟠' : '🟢'} </span>
+    <p className={cn('flex items-center gap-1.5 text-xs', tone)}>
+      <span aria-hidden="true" className={cn('h-2 w-2 rounded-full', dot)} />
       {describeExpiry(days)}
     </p>
   );
@@ -162,22 +163,7 @@ export function ProductForm({
         />
       </div>
 
-      <Field label="Emoji" hint="Opcional: pega un emoji como icono">
-        {({ id, describedBy }) => (
-          <div className="w-20">
-            <Input
-              id={id}
-              aria-describedby={describedBy}
-              maxLength={4}
-              placeholder="🥛"
-              className="text-center text-lg"
-              {...register('icon')}
-            />
-          </div>
-        )}
-      </Field>
-
-      <Field label="Color">
+      <Field label="Color" hint="Se usa en el monograma del producto">
         {() => (
           <Controller
             control={control}

@@ -4,7 +4,6 @@ import {
 } from '@/persistence/repositories/product.repository';
 import { buildProduct, type ProductFields } from '@/domain/product/product.factory';
 import type { NewProductInput, Product } from '@/domain/product/product.types';
-import { guessEmoji } from '@/domain/product/emoji';
 import { newId } from '@/domain/shared/ids';
 import { systemClock, type Clock } from '@/domain/shared/time';
 import { DEFAULT_PRODUCT_COLOR } from '@/config/constants';
@@ -41,8 +40,7 @@ export class InventoryService {
       favorite: input.favorite ?? false,
       expiryDate: input.expiryDate ?? null,
       notes: input.notes ?? '',
-      // Emoji automático a partir del nombre si no se indica uno.
-      icon: input.icon && input.icon.length > 0 ? input.icon : guessEmoji(input.name),
+      icon: input.icon ?? '',
       color: input.color ?? DEFAULT_PRODUCT_COLOR,
       tagIds: input.tagIds ?? [],
       barcode: input.barcode ?? null,
