@@ -81,9 +81,20 @@ describe('applyInventoryView', () => {
     ).toHaveLength(0);
   });
 
-  it('ordena por cantidad ascendente', () => {
+  it('en vista por defecto oculta los agotados (siguen en filtros)', () => {
+    // Sin filtros ni búsqueda: Atún (0) se oculta.
+    const plain = applyInventoryView(products, { ...EMPTY_FILTERS }, NOW, 3);
+    expect(plain.map((p) => p.name)).not.toContain('Atún');
+    expect(plain).toHaveLength(2);
+    // Con "Para comprar" o "Agotados" sí aparece.
+    expect(applyInventoryView(products, { ...EMPTY_FILTERS, quick: ['out'] }, NOW, 3)).toHaveLength(
+      1,
+    );
+  });
+
+  it('ordena por cantidad ascendente (agotados ocultos en vista plana)', () => {
     const sorted = applyInventoryView(products, { ...EMPTY_FILTERS, sort: 'quantity' }, NOW, 3);
-    expect(sorted.map((p) => p.quantity)).toEqual([0, 1, 6]);
+    expect(sorted.map((p) => p.quantity)).toEqual([1, 6]);
   });
 });
 

@@ -1,7 +1,11 @@
-import { useCallback, useMemo, useState } from 'react';
-import { PackageOpen, ScanBarcode, SearchX } from 'lucide-react';
+import { useCallback, useMemo, useRef, useState } from 'react';
+import { PackageOpen, ScanBarcode, SearchX, ShoppingCart } from 'lucide-react';
 import type { Product } from '@/domain/product/product.types';
-import { applyInventoryView, type InventoryFilters } from '@/domain/inventory/inventory-view';
+import {
+  applyInventoryView,
+  hasActiveFilters,
+  type InventoryFilters,
+} from '@/domain/inventory/inventory-view';
 import { inventoryService } from '@/services/inventory/inventory.service';
 import { lookupBarcode } from '@/services/scan/product-lookup';
 import { toast } from '@/stores/toast.store';
@@ -34,6 +38,9 @@ export function InventoryPage() {
   const [editing, setEditing] = useState<Product | null>(null);
   const [scanBarcode, setScanBarcode] = useState<string | null>(null);
   const [scannerOpen, setScannerOpen] = useState(false);
+  // Anti-duplicado del escáner: códigos en curso y su enfriamiento.
+  const scanBusy = useRef<Set<string>>(new Set());
+  const scanCooldown = useRef<Map<string, number>>(new Map());
 
   // Timestamp estable por montaje para calcular estados de caducidad.
   const [now] = useState(() => Date.now());
@@ -98,27 +105,40 @@ export function InventoryPage() {
   };
 
   // Al escanear: si ya existe el código → +1; si es nuevo → busca el nombre y lo
-  // crea; si no se encuentra → abre el formulario para nombrarlo.
+  // crea; si no se encuentra → abre el formulario para nombrarlo. Un guard evita
+  // procesar el mismo código dos veces a la vez (crearía duplicados por la red).
   const handleDetected = useCallback(async (barcode: string) => {
-    const existing = await inventoryService.getByBarcode(barcode);
-    if (existing) {
-      await inventoryService.adjustQuantity(existing.id, 1);
-      toast(`${existing.name}: +1`, 'success');
-      return;
+    const cooled = scanCooldown.current.get(barcode);
+    if (scanBusy.current.has(barcode) || (cooled && Date.now() - cooled < 3000)) return;
+    scanBusy.current.add(barcode);
+    try {
+      const existing = await inventoryService.getByBarcode(barcode);
+      if (existing) {
+        const next = await inventoryService.adjustQuantity(existing.id, 1);
+        toast(
+          `Ya lo tienes · ${existing.name} (${next?.quantity ?? existing.quantity + 1})`,
+          'success',
+        );
+        return;
+      }
+      const info = await lookupBarcode(barcode);
+      if (info?.name) {
+        await inventoryService.create({ name: info.name, quantity: 1, barcode });
+        toast(`Añadido · ${info.name}`, 'success');
+        return;
+      }
+      setScannerOpen(false);
+      setEditing(null);
+      setScanBarcode(barcode);
+      setSheetOpen(true);
+    } finally {
+      scanBusy.current.delete(barcode);
+      scanCooldown.current.set(barcode, Date.now());
     }
-    const info = await lookupBarcode(barcode);
-    if (info?.name) {
-      await inventoryService.create({ name: info.name, quantity: 1, barcode });
-      toast(`Añadido: ${info.name}`, 'success');
-      return;
-    }
-    setScannerOpen(false);
-    setEditing(null);
-    setScanBarcode(barcode);
-    setSheetOpen(true);
   }, []);
 
   const hasProducts = products.length > 0;
+  const filtersActive = hasActiveFilters(filters) || debouncedSearch.trim() !== '';
 
   return (
     <div className="space-y-4">
@@ -156,16 +176,29 @@ export function InventoryPage() {
           }
         />
       ) : filtered.length === 0 ? (
-        <EmptyState
-          icon={SearchX}
-          title="Sin resultados"
-          description="Ningún producto coincide con la búsqueda o los filtros activos."
-          action={
-            <Button variant="secondary" onClick={filters.reset}>
-              Quitar filtros
-            </Button>
-          }
-        />
+        filtersActive ? (
+          <EmptyState
+            icon={SearchX}
+            title="Sin resultados"
+            description="Ningún producto coincide con la búsqueda o los filtros activos."
+            action={
+              <Button variant="secondary" onClick={filters.reset}>
+                Quitar filtros
+              </Button>
+            }
+          />
+        ) : (
+          <EmptyState
+            icon={ShoppingCart}
+            title="Nada en stock ahora mismo"
+            description="Los productos agotados no se muestran aquí; los tienes en «Para comprar»."
+            action={
+              <Button onClick={() => filters.applyPreset({ quick: ['toBuy'] })}>
+                Ver para comprar
+              </Button>
+            }
+          />
+        )
       ) : (
         <ProductList
           products={filtered}

@@ -122,8 +122,13 @@ export function applyInventoryView(
   soonDays: number,
 ): Product[] {
   const needle = normalizeText(filters.search.trim());
+  // En la vista por defecto (sin búsqueda ni filtros) se ocultan los agotados:
+  // siguen existiendo y aparecen en "Para comprar"/"Agotados", pero no ensucian
+  // el inventario del día a día.
+  const plainView = needle === '' && !hasActiveFilters(filters);
 
   const filtered = products.filter((p) => {
+    if (plainView && stockStatus(p) === 'out') return false;
     if (
       needle &&
       !normalizeText(p.name).includes(needle) &&
