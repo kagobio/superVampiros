@@ -3,7 +3,7 @@ import { ChefHat, Sparkles, Utensils } from 'lucide-react';
 import type { Recipe } from '@/domain/recipe/recipe.types';
 import { normalizeText } from '@/domain/inventory/inventory-view';
 import { recipeService } from '@/services/recipe/recipe.service';
-import { suggestRecipes, type SuggestedRecipe } from '@/services/recipe/suggest.service';
+import { type SuggestedRecipe } from '@/services/recipe/suggest.service';
 import { toast } from '@/stores/toast.store';
 import { Fab } from '@/components/ui/Fab';
 import { Button } from '@/components/ui/Button';
@@ -11,7 +11,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { useProducts } from '@/features/inventory/hooks/useProducts';
 import { useRecipes } from './hooks/useRecipes';
 import { RecipeEditorSheet } from './components/RecipeEditorSheet';
-import { SuggestionsSheet } from './components/SuggestionsSheet';
+import { RecipeChatSheet } from './components/RecipeChatSheet';
 
 export function RecipesPage() {
   const recipes = useRecipes();
@@ -21,10 +21,19 @@ export function RecipesPage() {
   // Cambia en cada apertura para forzar el remontaje (reset) del editor.
   const [openKey, setOpenKey] = useState(0);
 
-  const [suggestOpen, setSuggestOpen] = useState(false);
-  const [suggestLoading, setSuggestLoading] = useState(false);
-  const [suggestError, setSuggestError] = useState<string | null>(null);
-  const [suggestions, setSuggestions] = useState<SuggestedRecipe[]>([]);
+  const [chatOpen, setChatOpen] = useState(false);
+  // Fuerza el remontaje (reset) del chat en cada apertura.
+  const [chatKey, setChatKey] = useState(0);
+
+  const openChat = () => {
+    const items = products.filter((p) => p.quantity > 0).map((p) => p.name);
+    if (items.length === 0) {
+      toast('No tienes productos en stock para sugerir recetas', 'default');
+      return;
+    }
+    setChatKey((k) => k + 1);
+    setChatOpen(true);
+  };
 
   const openEditor = (recipe: Recipe | null) => {
     setEditing(recipe);
@@ -40,25 +49,6 @@ export function RecipesPage() {
       toast(`Cocinado. Faltaba stock de ${res.shortages.length} ingrediente(s)`, 'warning');
     } else {
       toast('¡Cocinado! Ingredientes descontados', 'success');
-    }
-  };
-
-  const handleSuggest = async () => {
-    const items = products.filter((p) => p.quantity > 0).map((p) => p.name);
-    if (items.length === 0) {
-      toast('No tienes productos en stock para sugerir recetas', 'default');
-      return;
-    }
-    setSuggestions([]);
-    setSuggestError(null);
-    setSuggestLoading(true);
-    setSuggestOpen(true);
-    try {
-      setSuggestions(await suggestRecipes(items));
-    } catch (e) {
-      setSuggestError(e instanceof Error ? e.message : 'No se pudieron sugerir recetas.');
-    } finally {
-      setSuggestLoading(false);
     }
   };
 
@@ -82,8 +72,9 @@ export function RecipesPage() {
 
     await recipeService.create({ name: s.nombre, description, ingredients });
     toast(`Receta guardada: ${s.nombre}`, 'success');
-    setSuggestOpen(false);
   };
+
+  const chatItems = products.filter((p) => p.quantity > 0).map((p) => p.name);
 
   return (
     <div className="space-y-4">
@@ -93,9 +84,9 @@ export function RecipesPage() {
       </div>
 
       {products.length > 0 ? (
-        <Button variant="secondary" className="w-full" onClick={handleSuggest}>
+        <Button variant="secondary" className="w-full" onClick={openChat}>
           <Sparkles size={18} aria-hidden="true" />
-          Sugerir recetas con lo que tengo
+          Chef IA · recetas con lo que tengo
         </Button>
       ) : null}
 
@@ -144,18 +135,17 @@ export function RecipesPage() {
       <Fab onClick={openCreate} label="Crear receta" />
 
       <RecipeEditorSheet
-        key={openKey}
+        key={`editor-${openKey}`}
         open={sheetOpen}
         onClose={() => setSheetOpen(false)}
         recipe={editing}
       />
 
-      <SuggestionsSheet
-        open={suggestOpen}
-        onClose={() => setSuggestOpen(false)}
-        loading={suggestLoading}
-        error={suggestError}
-        suggestions={suggestions}
+      <RecipeChatSheet
+        key={`chat-${chatKey}`}
+        open={chatOpen}
+        onClose={() => setChatOpen(false)}
+        items={chatItems}
         onSave={saveSuggestion}
       />
     </div>
