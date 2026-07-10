@@ -1,6 +1,7 @@
 import { Moon, Sun } from 'lucide-react';
 import { resolveTheme, useThemeStore } from '@/stores/theme.store';
 import { APP_NAME } from '@/config/constants';
+import { Logo } from '@/components/ui/Logo';
 
 /** Cabecera con el logotipo y el conmutador de tema. */
 export function Header() {
@@ -11,10 +12,8 @@ export function Header() {
   return (
     <header className="sticky top-0 z-20 border-b border-border bg-surface/90 backdrop-blur-md pt-[env(safe-area-inset-top)]">
       <div className="mx-auto flex max-w-2xl items-center justify-between px-4 py-3">
-        <a href="/" className="flex items-center gap-2">
-          <span aria-hidden="true" className="text-xl leading-none">
-            🧛
-          </span>
+        <a href="/" className="flex items-center gap-2.5">
+          <Logo className="text-primary" />
           <span className="font-display text-lg tracking-tight text-text">{APP_NAME}</span>
         </a>
         <button
