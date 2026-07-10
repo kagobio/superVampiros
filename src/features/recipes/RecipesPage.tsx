@@ -1,20 +1,30 @@
 import { useState } from 'react';
-import { ChefHat, Utensils } from 'lucide-react';
+import { ChefHat, Sparkles, Utensils } from 'lucide-react';
 import type { Recipe } from '@/domain/recipe/recipe.types';
+import { normalizeText } from '@/domain/inventory/inventory-view';
 import { recipeService } from '@/services/recipe/recipe.service';
+import { suggestRecipes, type SuggestedRecipe } from '@/services/recipe/suggest.service';
 import { toast } from '@/stores/toast.store';
 import { Fab } from '@/components/ui/Fab';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { useProducts } from '@/features/inventory/hooks/useProducts';
 import { useRecipes } from './hooks/useRecipes';
 import { RecipeEditorSheet } from './components/RecipeEditorSheet';
+import { SuggestionsSheet } from './components/SuggestionsSheet';
 
 export function RecipesPage() {
   const recipes = useRecipes();
+  const products = useProducts();
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editing, setEditing] = useState<Recipe | null>(null);
   // Cambia en cada apertura para forzar el remontaje (reset) del editor.
   const [openKey, setOpenKey] = useState(0);
+
+  const [suggestOpen, setSuggestOpen] = useState(false);
+  const [suggestLoading, setSuggestLoading] = useState(false);
+  const [suggestError, setSuggestError] = useState<string | null>(null);
+  const [suggestions, setSuggestions] = useState<SuggestedRecipe[]>([]);
 
   const openEditor = (recipe: Recipe | null) => {
     setEditing(recipe);
@@ -33,12 +43,61 @@ export function RecipesPage() {
     }
   };
 
+  const handleSuggest = async () => {
+    const items = products.filter((p) => p.quantity > 0).map((p) => p.name);
+    if (items.length === 0) {
+      toast('No tienes productos en stock para sugerir recetas', 'default');
+      return;
+    }
+    setSuggestions([]);
+    setSuggestError(null);
+    setSuggestLoading(true);
+    setSuggestOpen(true);
+    try {
+      setSuggestions(await suggestRecipes(items));
+    } catch (e) {
+      setSuggestError(e instanceof Error ? e.message : 'No se pudieron sugerir recetas.');
+    } finally {
+      setSuggestLoading(false);
+    }
+  };
+
+  // Guarda una sugerencia como receta, emparejando ingredientes con el inventario.
+  const saveSuggestion = async (s: SuggestedRecipe) => {
+    const findProduct = (ingName: string) => {
+      const n = normalizeText(ingName);
+      return products.find((p) => {
+        const pn = normalizeText(p.name);
+        return pn === n || pn.includes(n) || n.includes(pn);
+      });
+    };
+    const ingredients = s.ingredientes
+      .map((i) => findProduct(i.nombre))
+      .filter((p): p is NonNullable<typeof p> => Boolean(p))
+      .map((p) => ({ productId: p.id, quantity: 1, unitId: p.unitId }));
+    const missing = s.ingredientes.filter((i) => !findProduct(i.nombre)).map((i) => i.nombre);
+    const description = [s.pasos.join('\n'), missing.length ? `Faltan: ${missing.join(', ')}` : '']
+      .filter(Boolean)
+      .join('\n\n');
+
+    await recipeService.create({ name: s.nombre, description, ingredients });
+    toast(`Receta guardada: ${s.nombre}`, 'success');
+    setSuggestOpen(false);
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex items-baseline justify-between">
         <h1 className="text-2xl">Recetas</h1>
         <span className="text-sm text-muted">{recipes.length}</span>
       </div>
+
+      {products.length > 0 ? (
+        <Button variant="secondary" className="w-full" onClick={handleSuggest}>
+          <Sparkles size={18} aria-hidden="true" />
+          Sugerir recetas con lo que tengo
+        </Button>
+      ) : null}
 
       {recipes.length === 0 ? (
         <EmptyState
@@ -89,6 +148,15 @@ export function RecipesPage() {
         open={sheetOpen}
         onClose={() => setSheetOpen(false)}
         recipe={editing}
+      />
+
+      <SuggestionsSheet
+        open={suggestOpen}
+        onClose={() => setSuggestOpen(false)}
+        loading={suggestLoading}
+        error={suggestError}
+        suggestions={suggestions}
+        onSave={saveSuggestion}
       />
     </div>
   );
