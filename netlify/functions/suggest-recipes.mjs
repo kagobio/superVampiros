@@ -2,7 +2,10 @@
 // Gemini a partir del inventario. La clave (GEMINI_API_KEY) vive en el servidor,
 // nunca en el cliente. Modelo de la capa gratuita: gemini-2.0-flash.
 
-const MODEL = 'gemini-2.0-flash';
+// `gemini-1.5-flash` tiene capa gratuita real (2.0-flash daba `limit: 0` en
+// algunos proyectos). Se puede cambiar sin tocar código con la variable
+// GEMINI_MODEL en Netlify si hiciera falta probar otro.
+const MODEL = process.env.GEMINI_MODEL || 'gemini-1.5-flash';
 
 export default async (req) => {
   if (req.method !== 'POST') {
