@@ -4,29 +4,6 @@
 
 const MODEL = 'gemini-2.0-flash';
 
-const RESPONSE_SCHEMA = {
-  type: 'ARRAY',
-  items: {
-    type: 'OBJECT',
-    properties: {
-      nombre: { type: 'STRING' },
-      ingredientes: {
-        type: 'ARRAY',
-        items: {
-          type: 'OBJECT',
-          properties: {
-            nombre: { type: 'STRING' },
-            tengo: { type: 'BOOLEAN' },
-          },
-          required: ['nombre', 'tengo'],
-        },
-      },
-      pasos: { type: 'ARRAY', items: { type: 'STRING' } },
-    },
-    required: ['nombre', 'ingredientes', 'pasos'],
-  },
-};
-
 export default async (req) => {
   if (req.method !== 'POST') {
     return Response.json({ error: 'Método no permitido' }, { status: 405 });
@@ -54,8 +31,10 @@ export default async (req) => {
     'Eres un ayudante de cocina español. Con estos ingredientes disponibles en casa:\n' +
     items.map((i) => `- ${i}`).join('\n') +
     '\n\nSugiere 4 recetas sencillas y realistas que se puedan hacer sobre todo con esos ingredientes ' +
-    '(puedes asumir básicos como sal, aceite, agua). Para cada ingrediente marca "tengo": true si está ' +
-    'en la lista de arriba, o false si haría falta comprarlo. Los pasos, breves y claros. Responde en español.';
+    '(puedes asumir básicos como sal, aceite y agua). Los pasos, breves y claros, en español.\n\n' +
+    'Responde ÚNICAMENTE con un array JSON válido (sin texto ni ```), con este formato exacto:\n' +
+    '[{"nombre":"string","ingredientes":[{"nombre":"string","tengo":true}],"pasos":["string"]}]\n' +
+    'En cada ingrediente, "tengo" es true si está en la lista de arriba, o false si hay que comprarlo.';
 
   try {
     const res = await fetch(
@@ -65,22 +44,31 @@ export default async (req) => {
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: {
-            responseMimeType: 'application/json',
-            responseSchema: RESPONSE_SCHEMA,
-            temperature: 0.8,
-          },
+          generationConfig: { responseMimeType: 'application/json', temperature: 0.8 },
         }),
       },
     );
 
     if (!res.ok) {
-      return Response.json({ error: 'La IA no respondió correctamente.' }, { status: 502 });
+      // Devolvemos el error real de Gemini para poder diagnosticar.
+      let detail = '';
+      try {
+        const e = await res.json();
+        detail = e?.error?.message ?? JSON.stringify(e).slice(0, 300);
+      } catch {
+        detail = (await res.text().catch(() => '')).slice(0, 300);
+      }
+      return Response.json({ error: `Gemini ${res.status}: ${detail || 'sin detalle'}` }, { status: 502 });
     }
+
     const data = await res.json();
-    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? '[]';
+    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!text) {
+      const reason = data?.candidates?.[0]?.finishReason ?? 'sin contenido';
+      return Response.json({ error: `La IA no devolvió recetas (${reason}).` }, { status: 502 });
+    }
     return new Response(text, { headers: { 'content-type': 'application/json' } });
-  } catch {
-    return Response.json({ error: 'No se pudo contactar con la IA.' }, { status: 502 });
+  } catch (e) {
+    return Response.json({ error: `No se pudo contactar con la IA: ${String(e)}` }, { status: 502 });
   }
 };
