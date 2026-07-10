@@ -13,7 +13,6 @@ interface ProductCardProps {
   now: number;
   expirySoonDays: number;
   onAdjust: (id: string, delta: number) => void;
-  onToggleFavorite: (id: string) => void;
   onOpen: (product: Product) => void;
 }
 
@@ -30,14 +29,13 @@ function ProductCardBase({
   now,
   expirySoonDays,
   onAdjust,
-  onToggleFavorite,
   onOpen,
 }: ProductCardProps) {
   const stock = stockStatus(product);
   const expiry = expiryStatus(product, now, expirySoonDays);
 
   return (
-    <div className="flex items-center gap-2 rounded-2xl border border-border bg-surface p-3">
+    <div className="flex items-center gap-2.5 rounded-2xl border border-border bg-surface p-3.5">
       {/* Zona pulsable que abre la edición (no incluye favorito ni stepper). */}
       <button
         type="button"
@@ -51,9 +49,16 @@ function ProductCardBase({
               aria-hidden="true"
               className={cn('h-2 w-2 shrink-0 rounded-full', stockDot[stock])}
             />
-            <span className="truncate font-medium text-text">{product.name}</span>
+            <span className="truncate text-base font-semibold text-text">{product.name}</span>
+            {product.favorite ? (
+              <Star
+                size={14}
+                aria-label="Favorito"
+                className="shrink-0 fill-warning text-warning"
+              />
+            ) : null}
           </span>
-          <span className="mt-0.5 flex items-center gap-2 text-xs text-muted">
+          <span className="mt-1 flex items-center gap-2 text-xs text-muted">
             {subtitle ? <span className="truncate">{subtitle}</span> : null}
             {expiry === 'expired' ? (
               <span className="rounded-full bg-danger/15 px-1.5 py-0.5 text-danger">Caducado</span>
@@ -64,24 +69,6 @@ function ProductCardBase({
             ) : null}
           </span>
         </span>
-      </button>
-
-      <button
-        type="button"
-        onClick={() => onToggleFavorite(product.id)}
-        aria-pressed={product.favorite}
-        aria-label={
-          product.favorite
-            ? `Quitar ${product.name} de favoritos`
-            : `Marcar ${product.name} como favorito`
-        }
-        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-muted transition-colors hover:bg-surface-2"
-      >
-        <Star
-          size={18}
-          aria-hidden="true"
-          className={product.favorite ? 'fill-warning text-warning' : ''}
-        />
       </button>
 
       <Stepper

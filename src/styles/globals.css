@@ -33,15 +33,17 @@
   --border: var(--vamp-border);
   --text: var(--vamp-bone);
   --muted: var(--vamp-muted);
-  --primary: var(--vamp-blood);
-  --primary-hover: var(--vamp-blood-bright);
-  --primary-fg: #fff5f5;
-  --accent: var(--vamp-garnet);
+  /* Granate profundo como color principal (más sobrio); el rojo vivo se reserva
+     para acentos y alertas. */
+  --primary: var(--vamp-garnet);
+  --primary-hover: var(--vamp-blood);
+  --primary-fg: #fdf3f3;
+  --accent: var(--vamp-blood);
   --danger: var(--vamp-blood-bright);
   --success: var(--vamp-green);
   --warning: var(--vamp-amber);
-  --ring: color-mix(in oklab, var(--vamp-blood-bright) 60%, transparent);
-  --shadow: 0 8px 30px -12px rgb(0 0 0 / 0.7);
+  --ring: color-mix(in oklab, var(--vamp-garnet) 55%, transparent);
+  --shadow: 0 10px 34px -16px rgb(0 0 0 / 0.65);
   color-scheme: dark;
 }
 

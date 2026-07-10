@@ -30,8 +30,8 @@ export function Fab({
       className={cn(
         'fixed right-4 z-30 flex h-14 w-14 items-center justify-center rounded-2xl transition-transform active:scale-95 mb-[env(safe-area-inset-bottom)]',
         variant === 'primary'
-          ? 'bg-primary text-primary-fg shadow-[0_10px_30px_-8px_rgba(176,18,27,0.6)] hover:bg-primary-hover'
-          : 'border border-border bg-surface text-text shadow-lg hover:bg-surface-2',
+          ? 'bg-primary text-primary-fg shadow-[0_12px_28px_-10px_rgba(0,0,0,0.5)] hover:bg-primary-hover'
+          : 'border border-border bg-surface text-text shadow-[0_10px_24px_-12px_rgba(0,0,0,0.45)] hover:bg-surface-2',
         className ?? 'bottom-20',
       )}
     >

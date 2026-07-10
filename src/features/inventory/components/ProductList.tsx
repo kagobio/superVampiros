@@ -10,12 +10,11 @@ interface ProductListProps {
   now: number;
   expirySoonDays: number;
   onAdjust: (id: string, delta: number) => void;
-  onToggleFavorite: (id: string) => void;
   onOpen: (product: Product) => void;
 }
 
-const ROW_HEIGHT = 76;
-const GAP = 8;
+const ROW_HEIGHT = 82;
+const GAP = 10;
 
 /**
  * Lista de productos virtualizada contra el scroll de la ventana. Solo renderiza
@@ -28,7 +27,6 @@ export function ProductList({
   now,
   expirySoonDays,
   onAdjust,
-  onToggleFavorite,
   onOpen,
 }: ProductListProps) {
   const listRef = useRef<HTMLDivElement>(null);
@@ -64,7 +62,6 @@ export function ProductList({
               now={now}
               expirySoonDays={expirySoonDays}
               onAdjust={onAdjust}
-              onToggleFavorite={onToggleFavorite}
               onOpen={onOpen}
             />
           </div>

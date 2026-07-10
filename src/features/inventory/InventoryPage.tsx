@@ -100,9 +100,6 @@ export function InventoryPage() {
   const adjust = (id: string, delta: number) => {
     void inventoryService.adjustQuantity(id, delta);
   };
-  const toggleFavorite = (id: string) => {
-    void inventoryService.toggleFavorite(id);
-  };
 
   // Al escanear: si ya existe el código → +1; si es nuevo → busca el nombre y lo
   // crea; si no se encuentra → abre el formulario para nombrarlo. Un guard evita
@@ -207,7 +204,6 @@ export function InventoryPage() {
           now={now}
           expirySoonDays={settings.expirySoonDays}
           onAdjust={adjust}
-          onToggleFavorite={toggleFavorite}
           onOpen={openEdit}
         />
       )}
