@@ -6,6 +6,11 @@
 [build.environment]
   NODE_VERSION = "22"
 
+# Funciones serverless (p. ej. sugerencias de recetas con IA).
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+
 # Reescribe todas las rutas al index para que el enrutado del lado del cliente
 # (p. ej. /inventario, /compra) no devuelva 404 al recargar o compartir enlace.
 [[redirects]]

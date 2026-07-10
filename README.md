@@ -57,6 +57,20 @@ El `householdId` es el SHA-256 de la clave (imposible de adivinar). Los datos se
 replican con la política _last-write-wins_ (`updatedAt`/`revision`, tombstones) ya
 usada por importar/exportar.
 
+## Sugerencias de recetas con IA (opcional, gratis)
+
+En **Recetas → «Sugerir recetas con lo que tengo»**, una IA propone recetas con
+tu inventario. Usa **Google Gemini** (capa gratuita) a través de una **función de
+Netlify** que mantiene la clave oculta.
+
+1. Consigue una clave gratis en [aistudio.google.com/apikey](https://aistudio.google.com/apikey).
+2. En **Netlify → Environment variables**, añade `GEMINI_API_KEY` (⚠️ **sin** el
+   prefijo `VITE_`: es de servidor, no debe llegar al navegador).
+3. Redespliega. La función serverless está en `netlify/functions/suggest-recipes.mjs`.
+
+Sin la clave, la app funciona igual; solo esa sugerencia mostrará un aviso de que
+no está configurada.
+
 ## Estado
 
 **Fases 0–6 completadas** + **sincronización (Fase 7)** con Firebase/Firestore en
