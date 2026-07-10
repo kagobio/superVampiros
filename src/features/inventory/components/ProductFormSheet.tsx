@@ -16,12 +16,20 @@ interface ProductFormSheetProps {
   /** Producto a editar; `null` para crear uno nuevo. */
   product: Product | null;
   defaultUnitId: string | null;
+  /** Nombre inicial al crear (p. ej. venido del escaneo). */
+  initialName?: string;
+  /** Código de barras a guardar al crear (venido del escaneo). */
+  barcode?: string | null;
 }
 
-function toFormValues(product: Product | null, defaultUnitId: string | null): ProductFormValues {
+function toFormValues(
+  product: Product | null,
+  defaultUnitId: string | null,
+  initialName: string,
+): ProductFormValues {
   if (!product) {
     return {
-      name: '',
+      name: initialName,
       categoryId: '',
       locationId: '',
       quantity: 1,
@@ -57,7 +65,14 @@ function nullable(value: string): string | null {
 }
 
 /** Sheet que contiene el formulario de producto y orquesta guardar/eliminar. */
-export function ProductFormSheet({ open, onClose, product, defaultUnitId }: ProductFormSheetProps) {
+export function ProductFormSheet({
+  open,
+  onClose,
+  product,
+  defaultUnitId,
+  initialName = '',
+  barcode = null,
+}: ProductFormSheetProps) {
   const formId = useId();
   const categories = useCategories();
   const locations = useLocations();
@@ -83,7 +98,7 @@ export function ProductFormSheet({ open, onClose, product, defaultUnitId }: Prod
     if (isEdit) {
       await inventoryService.update(product.id, payload);
     } else {
-      await inventoryService.create(payload);
+      await inventoryService.create({ ...payload, barcode });
     }
     onClose();
   };
@@ -114,11 +129,16 @@ export function ProductFormSheet({ open, onClose, product, defaultUnitId }: Prod
         </div>
       }
     >
-      {/* `key` reinicia el formulario al cambiar de producto (o entre crear/editar). */}
+      {barcode ? (
+        <p className="mb-3 rounded-lg bg-surface-2 px-3 py-2 text-xs text-muted">
+          Código escaneado: <span className="font-mono text-text">{barcode}</span>
+        </p>
+      ) : null}
+      {/* `key` reinicia el formulario al cambiar de producto o de código. */}
       <ProductForm
-        key={product?.id ?? 'new'}
+        key={product?.id ?? barcode ?? 'new'}
         formId={formId}
-        defaultValues={toFormValues(product, defaultUnitId)}
+        defaultValues={toFormValues(product, defaultUnitId, initialName)}
         categories={categories}
         locations={locations}
         units={units}

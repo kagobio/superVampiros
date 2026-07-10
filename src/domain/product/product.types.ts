@@ -20,6 +20,8 @@ export interface Product extends Entity {
   /** Color de acento del producto (hex). */
   color: string;
   tagIds: Id[];
+  /** Código de barras (EAN/UPC) para escanear y reconocer el producto. */
+  barcode: string | null;
 }
 
 /** Estado de stock derivado (no se persiste). */
@@ -42,4 +44,5 @@ export interface NewProductInput {
   icon?: string;
   color?: string;
   tagIds?: Id[];
+  barcode?: string | null;
 }

@@ -130,8 +130,14 @@ fase nueva sin cerrar (terminar + probar + revisar) la anterior. Leyenda:
   - Colección `households/{id}/docs` + reglas de Firestore; replicación LWW (`updatedAt`/`revision`, tombstones) reutilizando la política del importador.
   - Motor de sync: pull+push inicial, `onSnapshot` en tiempo real, hooks de Dexie para cambios locales (con anti-eco). UI en Ajustes (generar/copiar clave, estado, desactivar).
   - Reglas en [`firebase/firestore.rules`](./firebase/firestore.rules); config por `VITE_FIREBASE_*`. Tests de reconciliación LWW.
+- [x] **Escáner de códigos de barras** (`@zxing/browser`, cámara trasera, lazy):
+  - Escanear código conocido → **+1** automático (recuerda su categoría y todo).
+  - Código nuevo → busca el nombre en **Open Food Facts** y lo crea con el código guardado; si no se encuentra, abre el formulario para nombrarlo.
+  - Campo `barcode` en producto (Dexie v2) + `findByBarcode`.
+- [x] **Emoji automático** por nombre de producto (`guessEmoji`) al crear/escanear.
+- [x] Filtros reducidos a: Para comprar · Agotados · Caduca pronto · Favoritos.
+- [x] Categorías por defecto reducidas (el producto recuerda la suya).
 - [ ] Compartir inventario con otros hogares.
-- [ ] Escáner de códigos de barras.
 - [ ] OCR de tickets de compra.
 - [ ] Integración con supermercados.
 - [ ] IA: sugerencia de recetas según inventario.

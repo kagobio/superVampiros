@@ -1,23 +1,41 @@
-import { Plus } from 'lucide-react';
+import { Plus, type LucideIcon } from 'lucide-react';
+import { cn } from '@/lib/cn';
 
 interface FabProps {
   onClick: () => void;
   label: string;
+  icon?: LucideIcon;
+  /** Variante visual: primaria (rellena) o secundaria (superficie). */
+  variant?: 'primary' | 'secondary';
+  /** Clases extra para reposicionar (p. ej. apilar un segundo FAB). */
+  className?: string;
 }
 
 /**
  * Botón de acción flotante. Se ancla por encima de la navegación inferior para
- * que la acción principal (añadir) esté siempre a un toque.
+ * que la acción principal esté siempre a un toque.
  */
-export function Fab({ onClick, label }: FabProps) {
+export function Fab({
+  onClick,
+  label,
+  icon: Icon = Plus,
+  variant = 'primary',
+  className,
+}: FabProps) {
   return (
     <button
       type="button"
       onClick={onClick}
       aria-label={label}
-      className="fixed bottom-20 right-4 z-30 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary text-primary-fg shadow-[0_10px_30px_-8px_rgba(176,18,27,0.6)] transition-transform active:scale-95 hover:bg-primary-hover mb-[env(safe-area-inset-bottom)]"
+      className={cn(
+        'fixed right-4 z-30 flex h-14 w-14 items-center justify-center rounded-2xl transition-transform active:scale-95 mb-[env(safe-area-inset-bottom)]',
+        variant === 'primary'
+          ? 'bg-primary text-primary-fg shadow-[0_10px_30px_-8px_rgba(176,18,27,0.6)] hover:bg-primary-hover'
+          : 'border border-border bg-surface text-text shadow-lg hover:bg-surface-2',
+        className ?? 'bottom-20',
+      )}
     >
-      <Plus size={26} aria-hidden="true" />
+      <Icon size={26} aria-hidden="true" />
     </button>
   );
 }

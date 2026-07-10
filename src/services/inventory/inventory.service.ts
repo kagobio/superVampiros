@@ -4,9 +4,10 @@ import {
 } from '@/persistence/repositories/product.repository';
 import { buildProduct, type ProductFields } from '@/domain/product/product.factory';
 import type { NewProductInput, Product } from '@/domain/product/product.types';
+import { guessEmoji } from '@/domain/product/emoji';
 import { newId } from '@/domain/shared/ids';
 import { systemClock, type Clock } from '@/domain/shared/time';
-import { DEFAULT_PRODUCT_COLOR, DEFAULT_PRODUCT_ICON } from '@/config/constants';
+import { DEFAULT_PRODUCT_COLOR } from '@/config/constants';
 import { historyService, type HistoryService } from '@/services/history/history.service';
 
 /**
@@ -40,9 +41,11 @@ export class InventoryService {
       favorite: input.favorite ?? false,
       expiryDate: input.expiryDate ?? null,
       notes: input.notes ?? '',
-      icon: input.icon ?? DEFAULT_PRODUCT_ICON,
+      // Emoji automático a partir del nombre si no se indica uno.
+      icon: input.icon && input.icon.length > 0 ? input.icon : guessEmoji(input.name),
       color: input.color ?? DEFAULT_PRODUCT_COLOR,
       tagIds: input.tagIds ?? [],
+      barcode: input.barcode ?? null,
     };
     const product = buildProduct(newId(), this.clock.now(), fields);
     await this.repo.create(product);
@@ -53,6 +56,11 @@ export class InventoryService {
   /** Devuelve un producto vivo por id. */
   async get(id: string): Promise<Product | undefined> {
     return this.repo.getById(id);
+  }
+
+  /** Devuelve un producto vivo por su código de barras. */
+  async getByBarcode(barcode: string): Promise<Product | undefined> {
+    return this.repo.findByBarcode(barcode);
   }
 
   /** Actualiza campos editables de un producto. */

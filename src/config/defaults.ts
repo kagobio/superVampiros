@@ -9,14 +9,12 @@ export interface SeedCategory {
   color: string;
 }
 
+// Pocas categorías por defecto: el usuario prefiere tenerlo todo junto y que
+// cada producto recuerde la suya. Se pueden crear más en Ajustes.
 export const SEED_CATEGORIES: SeedCategory[] = [
-  { name: 'Nevera', icon: 'refrigerator', color: '#3B82C4' },
-  { name: 'Congelador', icon: 'snowflake', color: '#5AA9E6' },
   { name: 'Despensa', icon: 'archive', color: '#E0932F' },
-  { name: 'Bebidas', icon: 'cup-soda', color: '#8B5CF6' },
-  { name: 'Limpieza', icon: 'spray-can', color: '#3FB27F' },
-  { name: 'Baño', icon: 'bath', color: '#A7A0AA' },
-  { name: 'Mascotas', icon: 'paw-print', color: '#B0121B' },
+  { name: 'Nevera', icon: 'refrigerator', color: '#3B82C4' },
+  { name: 'Otros', icon: 'package', color: '#A7A0AA' },
 ];
 
 export interface SeedLocation {

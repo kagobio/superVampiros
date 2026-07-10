@@ -19,6 +19,7 @@ function product(over: Partial<Product>): Product {
     icon: '',
     color: '#000',
     tagIds: [],
+    barcode: null,
     ...over,
   };
 }

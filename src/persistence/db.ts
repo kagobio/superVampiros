@@ -45,6 +45,12 @@ export class VampireDB extends Dexie {
       history: 'id, timestamp, entityType, entityId, type',
       settings: 'id',
     });
+
+    // v2: índice por `barcode` para reconocer productos al escanear.
+    this.version(2).stores({
+      products:
+        'id, name, categoryId, locationId, favorite, expiryDate, updatedAt, deletedAt, barcode, *tagIds',
+    });
   }
 }
 

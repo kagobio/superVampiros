@@ -1,8 +1,10 @@
-import { useMemo, useState } from 'react';
-import { PackageOpen, SearchX } from 'lucide-react';
+import { useCallback, useMemo, useState } from 'react';
+import { PackageOpen, ScanBarcode, SearchX } from 'lucide-react';
 import type { Product } from '@/domain/product/product.types';
 import { applyInventoryView, type InventoryFilters } from '@/domain/inventory/inventory-view';
 import { inventoryService } from '@/services/inventory/inventory.service';
+import { lookupBarcode } from '@/services/scan/product-lookup';
+import { toast } from '@/stores/toast.store';
 import { SEARCH_DEBOUNCE_MS } from '@/config/constants';
 import { SearchBar } from '@/components/ui/SearchBar';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -12,6 +14,7 @@ import { useDebounce } from '@/hooks/useDebounce';
 import { useCategories, useLocations, useUnits } from '@/hooks/useTaxonomies';
 import { useSettings } from '@/hooks/useSettings';
 import { useFiltersStore } from '@/stores/filters.store';
+import { ScannerSheet } from '@/features/scan/ScannerSheet';
 import { useProducts } from './hooks/useProducts';
 import { ProductList } from './components/ProductList';
 import { ProductFormSheet } from './components/ProductFormSheet';
@@ -29,6 +32,8 @@ export function InventoryPage() {
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editing, setEditing] = useState<Product | null>(null);
+  const [scanBarcode, setScanBarcode] = useState<string | null>(null);
+  const [scannerOpen, setScannerOpen] = useState(false);
 
   // Timestamp estable por montaje para calcular estados de caducidad.
   const [now] = useState(() => Date.now());
@@ -77,10 +82,12 @@ export function InventoryPage() {
 
   const openCreate = () => {
     setEditing(null);
+    setScanBarcode(null);
     setSheetOpen(true);
   };
   const openEdit = (product: Product) => {
     setEditing(product);
+    setScanBarcode(null);
     setSheetOpen(true);
   };
   const adjust = (id: string, delta: number) => {
@@ -89,6 +96,27 @@ export function InventoryPage() {
   const toggleFavorite = (id: string) => {
     void inventoryService.toggleFavorite(id);
   };
+
+  // Al escanear: si ya existe el código → +1; si es nuevo → busca el nombre y lo
+  // crea; si no se encuentra → abre el formulario para nombrarlo.
+  const handleDetected = useCallback(async (barcode: string) => {
+    const existing = await inventoryService.getByBarcode(barcode);
+    if (existing) {
+      await inventoryService.adjustQuantity(existing.id, 1);
+      toast(`${existing.name}: +1`, 'success');
+      return;
+    }
+    const info = await lookupBarcode(barcode);
+    if (info?.name) {
+      await inventoryService.create({ name: info.name, quantity: 1, barcode });
+      toast(`Añadido: ${info.name}`, 'success');
+      return;
+    }
+    setScannerOpen(false);
+    setEditing(null);
+    setScanBarcode(barcode);
+    setSheetOpen(true);
+  }, []);
 
   const hasProducts = products.length > 0;
 
@@ -114,8 +142,18 @@ export function InventoryPage() {
         <EmptyState
           icon={PackageOpen}
           title="Aún no hay productos"
-          description="Añade tu primer producto para empezar a controlar el inventario."
-          action={<Button onClick={openCreate}>Añadir producto</Button>}
+          description="Escanea un código de barras o añádelo a mano para empezar."
+          action={
+            <div className="flex gap-2">
+              <Button onClick={() => setScannerOpen(true)}>
+                <ScanBarcode size={18} aria-hidden="true" />
+                Escanear
+              </Button>
+              <Button variant="secondary" onClick={openCreate}>
+                A mano
+              </Button>
+            </div>
+          }
         />
       ) : filtered.length === 0 ? (
         <EmptyState
@@ -141,13 +179,27 @@ export function InventoryPage() {
         />
       )}
 
+      <Fab
+        onClick={() => setScannerOpen(true)}
+        label="Escanear código de barras"
+        icon={ScanBarcode}
+        variant="secondary"
+        className="bottom-[8.75rem]"
+      />
       <Fab onClick={openCreate} label="Añadir producto" />
+
+      <ScannerSheet
+        open={scannerOpen}
+        onClose={() => setScannerOpen(false)}
+        onDetected={handleDetected}
+      />
 
       <ProductFormSheet
         open={sheetOpen}
         onClose={() => setSheetOpen(false)}
         product={editing}
         defaultUnitId={settings.defaultUnitId}
+        barcode={scanBarcode}
       />
     </div>
   );
