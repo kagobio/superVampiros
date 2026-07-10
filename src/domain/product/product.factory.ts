@@ -17,6 +17,7 @@ export interface ProductFields {
   icon: string;
   color: string;
   tagIds: Id[];
+  barcode: string | null;
 }
 
 /**

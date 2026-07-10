@@ -17,6 +17,12 @@ export class ProductRepository extends BaseRepository<Product> {
     return rows.sort((a, b) => a.name.localeCompare(b.name, 'es', { sensitivity: 'base' }));
   }
 
+  /** Busca un producto vivo por su código de barras. */
+  async findByBarcode(barcode: string): Promise<Product | undefined> {
+    const rows = await this.table.where('barcode').equals(barcode).toArray();
+    return rows.find((r) => r.deletedAt == null);
+  }
+
   /** Productos que referencian una taxonomía dada (para borrados seguros). */
   async countByCategory(categoryId: string): Promise<number> {
     return this.table.where('categoryId').equals(categoryId).count();

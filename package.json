@@ -20,6 +20,8 @@
   "dependencies": {
     "@hookform/resolvers": "^5.4.0",
     "@tanstack/react-virtual": "^3.14.5",
+    "@zxing/browser": "^0.2.1",
+    "@zxing/library": "^0.23.0",
     "dexie": "^4.4.4",
     "dexie-react-hooks": "^4.4.0",
     "firebase": "^12.16.0",
