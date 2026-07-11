@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { Star } from 'lucide-react';
+import { Check, Star } from 'lucide-react';
 import type { Product } from '@/domain/product/product.types';
 import { expiryStatus, stockStatus } from '@/domain/product/product.rules';
 import { Stepper } from '@/components/ui/Stepper';
@@ -13,6 +13,10 @@ interface ProductCardProps {
   expirySoonDays: number;
   onAdjust: (id: string, delta: number) => void;
   onOpen: (product: Product) => void;
+  /** En modo selección la tarjeta marca/desmarca en vez de abrir la edición. */
+  selectionMode?: boolean;
+  selected?: boolean;
+  onToggleSelect?: (id: string) => void;
 }
 
 const stockDot: Record<ReturnType<typeof stockStatus>, string> = {
@@ -29,18 +33,38 @@ function ProductCardBase({
   expirySoonDays,
   onAdjust,
   onOpen,
+  selectionMode = false,
+  selected = false,
+  onToggleSelect,
 }: ProductCardProps) {
   const stock = stockStatus(product);
   const expiry = expiryStatus(product, now, expirySoonDays);
 
   return (
-    <div className="flex items-center gap-2.5 rounded-2xl border border-border bg-surface p-3.5">
-      {/* Zona pulsable que abre la edición (no incluye favorito ni stepper). */}
+    <div
+      className={cn(
+        'flex items-center gap-2.5 rounded-2xl border bg-surface p-3.5 transition-colors',
+        selectionMode && selected ? 'border-primary bg-primary/5' : 'border-border',
+      )}
+    >
+      {/* Zona pulsable: abre la edición o, en modo selección, marca/desmarca. */}
       <button
         type="button"
-        onClick={() => onOpen(product)}
+        onClick={() => (selectionMode ? onToggleSelect?.(product.id) : onOpen(product))}
+        aria-pressed={selectionMode ? selected : undefined}
         className="flex min-w-0 flex-1 items-center gap-3 text-left"
       >
+        {selectionMode ? (
+          <span
+            aria-hidden="true"
+            className={cn(
+              'flex h-6 w-6 shrink-0 items-center justify-center rounded-full border transition-colors',
+              selected ? 'border-transparent bg-primary text-primary-fg' : 'border-border',
+            )}
+          >
+            {selected ? <Check size={14} /> : null}
+          </span>
+        ) : null}
         <span className="min-w-0 flex-1">
           <span className="flex items-center gap-1.5">
             <span
@@ -69,13 +93,15 @@ function ProductCardBase({
         </span>
       </button>
 
-      <Stepper
-        value={product.quantity}
-        label={product.name}
-        unit={unitAbbrev}
-        onDecrement={() => onAdjust(product.id, -1)}
-        onIncrement={() => onAdjust(product.id, 1)}
-      />
+      {selectionMode ? null : (
+        <Stepper
+          value={product.quantity}
+          label={product.name}
+          unit={unitAbbrev}
+          onDecrement={() => onAdjust(product.id, -1)}
+          onIncrement={() => onAdjust(product.id, 1)}
+        />
+      )}
     </div>
   );
 }

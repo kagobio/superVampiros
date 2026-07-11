@@ -2,6 +2,7 @@ import { useId } from 'react';
 import { Trash2 } from 'lucide-react';
 import type { Product } from '@/domain/product/product.types';
 import { inventoryService } from '@/services/inventory/inventory.service';
+import { toast } from '@/stores/toast.store';
 import { DEFAULT_PRODUCT_COLOR, DEFAULT_PRODUCT_ICON } from '@/config/constants';
 import { Sheet } from '@/components/ui/Sheet';
 import { Button } from '@/components/ui/Button';
@@ -104,10 +105,14 @@ export function ProductFormSheet({
   };
 
   const handleDelete = async () => {
-    if (product) {
-      await inventoryService.remove(product.id);
-      onClose();
-    }
+    if (!product) return;
+    const { id, name } = product;
+    await inventoryService.remove(id);
+    onClose();
+    toast(`Eliminado · ${name}`, 'default', {
+      label: 'Deshacer',
+      onClick: () => void inventoryService.restore(id),
+    });
   };
 
   return (

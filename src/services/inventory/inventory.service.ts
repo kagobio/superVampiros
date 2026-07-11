@@ -75,6 +75,20 @@ export class InventoryService {
     if (product) await this.history.record('delete', 'product', id, { name: product.name });
   }
 
+  /** Deshace un borrado (restaura el producto tal cual estaba). */
+  async restore(id: string): Promise<Product | undefined> {
+    const next = await this.repo.restore(id);
+    if (next) await this.history.record('update', 'product', id, { name: next.name });
+    return next;
+  }
+
+  /** Aplica los mismos cambios a varios productos (edición en lote). */
+  async updateMany(ids: string[], changes: Partial<Product>): Promise<void> {
+    for (const id of ids) {
+      await this.update(id, changes);
+    }
+  }
+
   /**
    * Ajusta la cantidad en `delta` (p. ej. +1 / −1 desde el Stepper). Nunca baja
    * de 0. Registra un evento de consumo o de compra según el signo.
