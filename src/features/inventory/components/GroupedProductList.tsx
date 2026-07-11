@@ -13,6 +13,9 @@ interface GroupedProductListProps {
   expirySoonDays: number;
   onAdjust: (id: string, delta: number) => void;
   onOpen: (product: Product) => void;
+  selectionMode?: boolean;
+  selectedIds?: Set<string>;
+  onToggleSelect?: (id: string) => void;
 }
 
 /**
@@ -28,6 +31,9 @@ export function GroupedProductList({
   expirySoonDays,
   onAdjust,
   onOpen,
+  selectionMode = false,
+  selectedIds,
+  onToggleSelect,
 }: GroupedProductListProps) {
   const collapsed = useCollapsedCategories((s) => s.collapsed);
   const toggle = useCollapsedCategories((s) => s.toggle);
@@ -75,6 +81,9 @@ export function GroupedProductList({
                     expirySoonDays={expirySoonDays}
                     onAdjust={onAdjust}
                     onOpen={onOpen}
+                    selectionMode={selectionMode}
+                    selected={selectedIds?.has(product.id) ?? false}
+                    onToggleSelect={onToggleSelect}
                   />
                 ))}
               </div>

@@ -55,4 +55,14 @@ export class BaseRepository<T extends Entity> {
     const now = this.clock.now();
     await this.table.put({ ...current, deletedAt: now, ...touch(current, now) } as T);
   }
+
+  /** Revierte un borrado lógico (deshacer): limpia `deletedAt` y propaga la sync. */
+  async restore(id: Id): Promise<T | undefined> {
+    const current = await this.table.get(id);
+    if (!current) return undefined;
+    const now = this.clock.now();
+    const next = { ...current, deletedAt: null, ...touch(current, now) } as T;
+    await this.table.put(next);
+    return next;
+  }
 }

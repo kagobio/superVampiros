@@ -19,11 +19,14 @@ import { useDebounce } from '@/hooks/useDebounce';
 import { useCategories, useLocations, useUnits } from '@/hooks/useTaxonomies';
 import { useSettings } from '@/hooks/useSettings';
 import { useFiltersStore } from '@/stores/filters.store';
+import { useCollapsedCategories } from '@/stores/collapsed-categories.store';
 import { ScannerSheet } from '@/features/scan/ScannerSheet';
 import { useProducts } from './hooks/useProducts';
 import { GroupedProductList } from './components/GroupedProductList';
 import { ProductFormSheet } from './components/ProductFormSheet';
 import { FilterBar } from './components/FilterBar';
+import { InventoryToolbar } from './components/InventoryToolbar';
+import { BulkActionBar } from './components/BulkActionBar';
 
 export function InventoryPage() {
   const products = useProducts();
@@ -88,6 +91,41 @@ export function InventoryPage() {
     () => groupProductsByCategory(filtered, categories),
     [filtered, categories],
   );
+
+  // Plegar/expandir todas las categorías visibles.
+  const collapsedMap = useCollapsedCategories((s) => s.collapsed);
+  const setManyCollapsed = useCollapsedCategories((s) => s.setMany);
+  const groupIds = useMemo(() => grouped.map((g) => g.id), [grouped]);
+  const allCollapsed = groupIds.length > 0 && groupIds.every((id) => collapsedMap[id]);
+  const toggleCollapseAll = () => setManyCollapsed(groupIds, !allCollapsed);
+
+  // Selección múltiple para edición en lote.
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const exitSelection = () => {
+    setSelectionMode(false);
+    setSelectedIds(new Set());
+  };
+  const toggleSelectionMode = () => (selectionMode ? exitSelection() : setSelectionMode(true));
+  const toggleSelect = (id: string) =>
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  const assignCategory = (categoryId: string | null) => {
+    const ids = [...selectedIds];
+    if (ids.length === 0) return;
+    void inventoryService.updateMany(ids, { categoryId });
+    toast(`${ids.length} ${ids.length === 1 ? 'producto movido' : 'productos movidos'}`, 'success');
+  };
+  const assignLocation = (locationId: string | null) => {
+    const ids = [...selectedIds];
+    if (ids.length === 0) return;
+    void inventoryService.updateMany(ids, { locationId });
+    toast(`${ids.length} ${ids.length === 1 ? 'producto movido' : 'productos movidos'}`, 'success');
+  };
 
   const openCreate = () => {
     setEditing(null);
@@ -199,25 +237,53 @@ export function InventoryPage() {
           />
         )
       ) : (
-        <GroupedProductList
-          groups={grouped}
-          unitById={unitById}
-          subtitleFor={subtitleFor}
-          now={now}
-          expirySoonDays={settings.expirySoonDays}
-          onAdjust={adjust}
-          onOpen={openEdit}
-        />
+        <div className="space-y-3">
+          <InventoryToolbar
+            sort={filters.sort}
+            onSortChange={filters.setSort}
+            allCollapsed={allCollapsed}
+            onToggleCollapseAll={toggleCollapseAll}
+            selectionMode={selectionMode}
+            onToggleSelectionMode={toggleSelectionMode}
+          />
+          <GroupedProductList
+            groups={grouped}
+            unitById={unitById}
+            subtitleFor={subtitleFor}
+            now={now}
+            expirySoonDays={settings.expirySoonDays}
+            onAdjust={adjust}
+            onOpen={openEdit}
+            selectionMode={selectionMode}
+            selectedIds={selectedIds}
+            onToggleSelect={toggleSelect}
+          />
+          {/* Deja hueco para que la barra de lote no tape la última tarjeta. */}
+          {selectionMode ? <div className="h-28" /> : null}
+        </div>
       )}
 
-      <Fab
-        onClick={() => setScannerOpen(true)}
-        label="Escanear código de barras"
-        icon={ScanBarcode}
-        variant="secondary"
-        className="bottom-[8.75rem]"
-      />
-      <Fab onClick={openCreate} label="Añadir producto" />
+      {selectionMode ? (
+        <BulkActionBar
+          count={selectedIds.size}
+          categories={categories}
+          locations={locations}
+          onAssignCategory={assignCategory}
+          onAssignLocation={assignLocation}
+          onDone={exitSelection}
+        />
+      ) : (
+        <>
+          <Fab
+            onClick={() => setScannerOpen(true)}
+            label="Escanear código de barras"
+            icon={ScanBarcode}
+            variant="secondary"
+            className="bottom-[8.75rem]"
+          />
+          <Fab onClick={openCreate} label="Añadir producto" />
+        </>
+      )}
 
       <ScannerSheet
         open={scannerOpen}
