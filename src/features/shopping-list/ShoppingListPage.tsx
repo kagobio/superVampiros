@@ -8,7 +8,6 @@ import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { IconButton } from '@/components/ui/IconButton';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { ProductAvatar } from '@/components/ui/ProductAvatar';
 import { cn } from '@/lib/cn';
 import { useCategories, useUnits } from '@/hooks/useTaxonomies';
 import { useProducts } from '@/features/inventory/hooks/useProducts';
@@ -100,7 +99,6 @@ export function ShoppingListPage() {
                     key={p.id}
                     className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-3"
                   >
-                    <ProductAvatar icon={p.icon} color={p.color} name={p.name} size="sm" />
                     <span className="min-w-0 flex-1">
                       <span className="block truncate font-medium text-text">{p.name}</span>
                       <span className="text-xs text-muted">

@@ -16,7 +16,6 @@ import type { InventoryFilters } from '@/domain/inventory/inventory-view';
 import { Stat } from '@/components/ui/Stat';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Button } from '@/components/ui/Button';
-import { ProductAvatar } from '@/components/ui/ProductAvatar';
 import { useFiltersStore } from '@/stores/filters.store';
 import { useSettings } from '@/hooks/useSettings';
 import { useProducts } from '@/features/inventory/hooks/useProducts';
@@ -120,7 +119,6 @@ export function DashboardPage() {
                   onClick={() => navigate('/inventario')}
                   className="flex w-full items-center gap-3 rounded-2xl border border-border bg-surface p-2.5 text-left transition-colors hover:bg-surface-2"
                 >
-                  <ProductAvatar icon={p.icon} color={p.color} name={p.name} size="sm" />
                   <span className="min-w-0 flex-1 truncate font-medium text-text">{p.name}</span>
                   <span className="text-sm tabular-nums text-muted">{p.quantity}</span>
                 </button>
