@@ -3,7 +3,6 @@ import type { Product } from '@/domain/product/product.types';
 import { Select } from './Select';
 import { Input } from './Input';
 import { IconButton } from './IconButton';
-import { ProductAvatar } from './ProductAvatar';
 
 /** Línea genérica producto + cantidad (sirve para ingredientes y packs). */
 export interface ProductLine {
@@ -59,12 +58,6 @@ export function ProductLinesEditor({
             key={line.productId}
             className="flex items-center gap-2 rounded-xl border border-border bg-surface-2 p-2"
           >
-            <ProductAvatar
-              icon={product?.icon ?? ''}
-              color={product?.color ?? '#7A1420'}
-              name={product?.name ?? '—'}
-              size="sm"
-            />
             <span className="min-w-0 flex-1 truncate text-sm text-text">
               {product?.name ?? 'Producto eliminado'}
             </span>
