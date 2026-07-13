@@ -32,12 +32,25 @@ export default async (req) => {
   }
 
   const prompt =
-    `Producto: "${name}"\n\n` +
-    'Categorías disponibles (elige SIEMPRE una, la que mejor encaje):\n' +
+    `Producto a clasificar: "${name}"\n\n` +
+    'Categorías del usuario (debes elegir EXACTAMENTE una de esta lista):\n' +
     categories.map((c) => `- ${c}`).join('\n') +
-    '\n\nDevuelve un objeto JSON {"categoria":"<nombre EXACTO de una categoría de la lista>"}. ' +
-    'Elige siempre la más adecuada aunque no sea perfecta; NO dejes la categoría vacía. No ' +
-    'inventes categorías nuevas ni uses ninguna que no esté en la lista.';
+    '\n\nCómo decidir:\n' +
+    '- Fíjate en QUÉ ES el producto y para qué se usa en casa.\n' +
+    '- Alimentos y bebidas van a categorías de comida (despensa, nevera, congelador, ' +
+    'bebidas y similares). NUNCA pongas un alimento o una bebida en categorías de ' +
+    'limpieza, higiene/baño ni mascotas.\n' +
+    '- Productos de limpieza del hogar (detergente, lejía, friegasuelos, bayetas…) → la ' +
+    'categoría de limpieza.\n' +
+    '- Higiene y cuidado personal (pasta de dientes, gel, champú, papel higiénico…) → la ' +
+    'categoría de baño.\n' +
+    '- Comida o accesorios de mascotas → la categoría de mascotas.\n' +
+    '- Si dudas entre varias de comida, elige la más lógica por conservación (fresco → ' +
+    'nevera, congelado → congelador, no perecedero → despensa).\n' +
+    '- Elige SIEMPRE la más adecuada de la lista; no dejes la categoría vacía. Usa el ' +
+    'nombre EXACTO de la lista.\n\n' +
+    'Piensa primero brevemente y responde con este JSON EXACTO: ' +
+    '{"razon":"<explicación muy breve>","categoria":"<nombre EXACTO de la lista>"}.';
 
   try {
     const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -49,7 +62,9 @@ export default async (req) => {
           {
             role: 'system',
             content:
-              'Eres un clasificador de productos de supermercado. Respondes solo con JSON válido.',
+              'Eres un asistente que clasifica productos de la compra en las categorías del ' +
+              'hogar del usuario según qué es cada producto y para qué se usa. Respondes solo ' +
+              'con JSON válido.',
           },
           { role: 'user', content: prompt },
         ],

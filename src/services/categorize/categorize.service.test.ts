@@ -20,6 +20,11 @@ describe('parseCategory', () => {
     expect(parseCategory('{"categoria":"Limpieza del hogar"}', allowed)).toBe('Limpieza');
   });
 
+  it('no hace match por subcadena suelta (evita falsos positivos)', () => {
+    // "despensa" está dentro de "despensado", pero no como palabra completa.
+    expect(parseCategory('{"categoria":"Despensado"}', allowed)).toBeNull();
+  });
+
   it('devuelve null con cadena vacía o JSON inválido', () => {
     expect(parseCategory('{"categoria":""}', allowed)).toBeNull();
     expect(parseCategory('no es json', allowed)).toBeNull();
