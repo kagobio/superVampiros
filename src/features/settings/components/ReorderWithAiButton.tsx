@@ -9,8 +9,11 @@ import { useProducts } from '@/features/inventory/hooks/useProducts';
  * Acción de mantenimiento: reclasifica TODOS los productos con IA de una pasada.
  * Sustituye las categorías actuales, así que pide confirmación. Muestra progreso
  * mientras trabaja (puede tardar con muchos productos).
+ *
+ * - `card`: tarjeta completa (para la página "Más").
+ * - `compact`: un botón de una línea (para el inventario).
  */
-export function ReorderWithAiButton() {
+export function ReorderWithAiButton({ variant = 'card' }: { variant?: 'card' | 'compact' }) {
   const products = useProducts();
   const categories = useCategories();
   const [confirming, setConfirming] = useState(false);
@@ -35,6 +38,48 @@ export function ReorderWithAiButton() {
       setProgress(null);
     }
   };
+
+  if (variant === 'compact') {
+    if (running) {
+      return (
+        <div className="flex w-full items-center gap-2 rounded-xl border border-border bg-surface-2 px-3 py-2.5 text-sm text-muted">
+          <Loader2 size={16} aria-hidden="true" className="shrink-0 animate-spin text-primary" />
+          Reordenando… {progress.done}/{progress.total}
+        </div>
+      );
+    }
+    if (confirming) {
+      return (
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={run}
+            className="flex-1 rounded-xl bg-primary px-3 py-2.5 text-sm font-medium text-primary-fg transition-colors hover:bg-primary-hover"
+          >
+            Reordenar todo (sustituye categorías)
+          </button>
+          <button
+            type="button"
+            onClick={() => setConfirming(false)}
+            className="rounded-xl border border-border px-3 py-2.5 text-sm text-muted transition-colors hover:text-text"
+          >
+            Cancelar
+          </button>
+        </div>
+      );
+    }
+    return (
+      <button
+        type="button"
+        onClick={() => setConfirming(true)}
+        disabled={disabled}
+        className="flex w-full items-center gap-2 rounded-xl border border-primary/40 bg-primary/5 px-3 py-2.5 text-sm text-text transition-colors hover:bg-primary/10 disabled:opacity-50"
+      >
+        <Sparkles size={16} aria-hidden="true" className="shrink-0 text-primary" />
+        <span className="text-left">Reordenar todo con IA</span>
+      </button>
+    );
+  }
 
   return (
     <div className="rounded-2xl border border-primary/40 bg-primary/5 p-3">
