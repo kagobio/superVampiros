@@ -1,0 +1,38 @@
+name: CI
+
+# Corre en cada PR (contra la fusión con la rama base, así detecta conflictos
+# semánticos entre PRs paralelas) y al empujar a main. Reproduce el build de
+# Netlify (`tsc -b && vite build`), que type-checkea también los *.test.ts.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# Cancela ejecuciones anteriores de la misma rama/PR si llega un push nuevo.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build (tsc + vite, igual que Netlify)
+        run: npm run build
+
+      - name: Tests
+        run: npm test
