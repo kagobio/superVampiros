@@ -2,6 +2,7 @@ import { useId } from 'react';
 import { Trash2 } from 'lucide-react';
 import type { Product } from '@/domain/product/product.types';
 import { inventoryService } from '@/services/inventory/inventory.service';
+import { autoAssignCategory } from '@/services/categorize/categorize.service';
 import { toast } from '@/stores/toast.store';
 import { DEFAULT_PRODUCT_COLOR, DEFAULT_PRODUCT_ICON } from '@/config/constants';
 import { Sheet } from '@/components/ui/Sheet';
@@ -99,7 +100,9 @@ export function ProductFormSheet({
     if (isEdit) {
       await inventoryService.update(product.id, payload);
     } else {
-      await inventoryService.create({ ...payload, barcode });
+      const created = await inventoryService.create({ ...payload, barcode });
+      // Si no se eligió categoría, la IA la asigna en segundo plano.
+      void autoAssignCategory(created, categories);
     }
     onClose();
   };

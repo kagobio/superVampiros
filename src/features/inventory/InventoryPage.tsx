@@ -9,6 +9,7 @@ import {
 } from '@/domain/inventory/inventory-view';
 import { inventoryService } from '@/services/inventory/inventory.service';
 import { lookupBarcode } from '@/services/scan/product-lookup';
+import { autoAssignCategory } from '@/services/categorize/categorize.service';
 import { toast } from '@/stores/toast.store';
 import { SEARCH_DEBOUNCE_MS } from '@/config/constants';
 import { SearchBar } from '@/components/ui/SearchBar';
@@ -160,8 +161,10 @@ export function InventoryPage() {
       }
       const info = await lookupBarcode(barcode);
       if (info?.name) {
-        await inventoryService.create({ name: info.name, quantity: 1, barcode });
+        const created = await inventoryService.create({ name: info.name, quantity: 1, barcode });
         toast(`Añadido · ${info.name}`, 'success');
+        // La IA le asigna una categoría en segundo plano (no bloquea el escaneo).
+        void autoAssignCategory(created, categories);
         return;
       }
       setScannerOpen(false);
@@ -172,7 +175,7 @@ export function InventoryPage() {
       scanBusy.current.delete(barcode);
       scanCooldown.current.set(barcode, Date.now());
     }
-  }, []);
+  }, [categories]);
 
   const hasProducts = products.length > 0;
   const filtersActive = hasActiveFilters(filters) || debouncedSearch.trim() !== '';
