@@ -75,32 +75,58 @@ export async function autoAssignCategory(
 }
 
 /**
- * Clasifica con IA todos los productos que aún no tienen categoría, asignándoles
- * una de las existentes. Se ejecuta de una vez (p. ej. al activar la función)
- * para que quede todo organizado. Secuencial para no saturar la IA; los que
- * fallen (p. ej. sin conexión) se quedan sin categoría y se pueden reintentar.
- * Devuelve cuántos se han categorizado.
+ * Núcleo de clasificación masiva: recorre `targets` secuencialmente (para no
+ * saturar la IA), pide su categoría y la aplica solo si cambia. Los que fallen
+ * (p. ej. sin conexión) se quedan como estaban. Devuelve cuántos han cambiado.
  */
-export async function categorizeUncategorized(
-  products: Product[],
+async function categorizeList(
+  targets: Product[],
   categories: Category[],
   onProgress?: (done: number, total: number) => void,
 ): Promise<number> {
   if (categories.length === 0) return 0;
-  const targets = products.filter((p) => p.categoryId == null);
   const names = categories.map((c) => c.name);
-  let assigned = 0;
+  let changed = 0;
   for (let i = 0; i < targets.length; i++) {
     const p = targets[i]!;
     const suggestion = await suggestCategory(p.name, names);
     const match = suggestion
       ? categories.find((c) => normalizeText(c.name) === normalizeText(suggestion))
       : null;
-    if (match) {
+    if (match && match.id !== p.categoryId) {
       await inventoryService.update(p.id, { categoryId: match.id });
-      assigned += 1;
+      changed += 1;
     }
     onProgress?.(i + 1, targets.length);
   }
-  return assigned;
+  return changed;
+}
+
+/**
+ * Clasifica con IA todos los productos que aún NO tienen categoría (mejora
+ * aditiva, no toca los ya categorizados). Devuelve cuántos se han categorizado.
+ */
+export function categorizeUncategorized(
+  products: Product[],
+  categories: Category[],
+  onProgress?: (done: number, total: number) => void,
+): Promise<number> {
+  return categorizeList(
+    products.filter((p) => p.categoryId == null),
+    categories,
+    onProgress,
+  );
+}
+
+/**
+ * Reclasifica con IA TODOS los productos, sustituyendo su categoría actual por la
+ * que decida la IA. Sirve para rehacer el orden de golpe (p. ej. tras mejorar la
+ * lógica). Devuelve cuántos han cambiado de categoría.
+ */
+export function recategorizeAll(
+  products: Product[],
+  categories: Category[],
+  onProgress?: (done: number, total: number) => void,
+): Promise<number> {
+  return categorizeList(products, categories, onProgress);
 }
