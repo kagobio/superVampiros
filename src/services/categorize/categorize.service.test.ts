@@ -16,6 +16,10 @@ describe('parseCategory', () => {
     expect(parseCategory('{"categoria":"Congelador"}', allowed)).toBeNull();
   });
 
+  it('empareja de forma aproximada cuando la IA añade matices', () => {
+    expect(parseCategory('{"categoria":"Limpieza del hogar"}', allowed)).toBe('Limpieza');
+  });
+
   it('devuelve null con cadena vacía o JSON inválido', () => {
     expect(parseCategory('{"categoria":""}', allowed)).toBeNull();
     expect(parseCategory('no es json', allowed)).toBeNull();

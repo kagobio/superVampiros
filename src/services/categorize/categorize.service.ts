@@ -7,6 +7,7 @@
  */
 import { normalizeText } from '@/domain/inventory/inventory-view';
 import type { Category } from '@/domain/category/category.types';
+import type { Product } from '@/domain/product/product.types';
 import { inventoryService } from '@/services/inventory/inventory.service';
 
 /** Valida la categoría devuelta por la IA contra las permitidas. Función pura. */
@@ -20,7 +21,17 @@ export function parseCategory(text: string, allowed: string[]): string | null {
   }
   if (!name) return null;
   const needle = normalizeText(name);
-  return allowed.find((a) => normalizeText(a) === needle) ?? null;
+  const exact = allowed.find((a) => normalizeText(a) === needle);
+  if (exact) return exact;
+  // Red de seguridad: la IA a veces añade matices ("Bebidas frías"); casamos por
+  // inclusión en cualquier sentido si el texto es suficientemente largo.
+  if (needle.length < 3) return null;
+  return (
+    allowed.find((a) => {
+      const an = normalizeText(a);
+      return an.length >= 3 && (needle.includes(an) || an.includes(needle));
+    }) ?? null
+  );
 }
 
 /** Pide a la IA la mejor categoría (de entre las existentes) para un producto. */
@@ -59,4 +70,35 @@ export async function autoAssignCategory(
   if (!suggestion) return;
   const match = categories.find((c) => normalizeText(c.name) === normalizeText(suggestion));
   if (match) await inventoryService.update(product.id, { categoryId: match.id });
+}
+
+/**
+ * Clasifica con IA todos los productos que aún no tienen categoría, asignándoles
+ * una de las existentes. Se ejecuta de una vez (p. ej. al activar la función)
+ * para que quede todo organizado. Secuencial para no saturar la IA; los que
+ * fallen (p. ej. sin conexión) se quedan sin categoría y se pueden reintentar.
+ * Devuelve cuántos se han categorizado.
+ */
+export async function categorizeUncategorized(
+  products: Product[],
+  categories: Category[],
+  onProgress?: (done: number, total: number) => void,
+): Promise<number> {
+  if (categories.length === 0) return 0;
+  const targets = products.filter((p) => p.categoryId == null);
+  const names = categories.map((c) => c.name);
+  let assigned = 0;
+  for (let i = 0; i < targets.length; i++) {
+    const p = targets[i]!;
+    const suggestion = await suggestCategory(p.name, names);
+    const match = suggestion
+      ? categories.find((c) => normalizeText(c.name) === normalizeText(suggestion))
+      : null;
+    if (match) {
+      await inventoryService.update(p.id, { categoryId: match.id });
+      assigned += 1;
+    }
+    onProgress?.(i + 1, targets.length);
+  }
+  return assigned;
 }

@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
-import { PackageOpen, ScanBarcode, SearchX, ShoppingCart } from 'lucide-react';
+import { Loader2, PackageOpen, ScanBarcode, SearchX, ShoppingCart, Sparkles } from 'lucide-react';
 import type { Product } from '@/domain/product/product.types';
 import {
   applyInventoryView,
@@ -9,7 +9,10 @@ import {
 } from '@/domain/inventory/inventory-view';
 import { inventoryService } from '@/services/inventory/inventory.service';
 import { lookupBarcode } from '@/services/scan/product-lookup';
-import { autoAssignCategory } from '@/services/categorize/categorize.service';
+import {
+  autoAssignCategory,
+  categorizeUncategorized,
+} from '@/services/categorize/categorize.service';
 import { toast } from '@/stores/toast.store';
 import { SEARCH_DEBOUNCE_MS } from '@/config/constants';
 import { SearchBar } from '@/components/ui/SearchBar';
@@ -142,6 +145,28 @@ export function InventoryPage() {
     void inventoryService.adjustQuantity(id, delta);
   };
 
+  // Clasificación masiva con IA de los productos sin categoría.
+  const [organizing, setOrganizing] = useState(false);
+  const uncategorizedCount = useMemo(
+    () => products.filter((p) => p.categoryId == null).length,
+    [products],
+  );
+  const organizeWithAI = async () => {
+    if (organizing) return;
+    setOrganizing(true);
+    try {
+      const n = await categorizeUncategorized(products, categories);
+      toast(
+        n > 0
+          ? `Organizados ${n} ${n === 1 ? 'producto' : 'productos'} con IA`
+          : 'No se pudo organizar (¿sin conexión?)',
+        n > 0 ? 'success' : 'default',
+      );
+    } finally {
+      setOrganizing(false);
+    }
+  };
+
   // Al escanear: si ya existe el código → +1; si es nuevo → busca el nombre y lo
   // crea; si no se encuentra → abre el formulario para nombrarlo. Un guard evita
   // procesar el mismo código dos veces a la vez (crearía duplicados por la red).
@@ -195,6 +220,25 @@ export function InventoryPage() {
             placeholder="Buscar producto…"
           />
           <FilterBar />
+          {uncategorizedCount > 0 && categories.length > 0 ? (
+            <button
+              type="button"
+              onClick={organizeWithAI}
+              disabled={organizing}
+              className="flex w-full items-center gap-2 rounded-xl border border-primary/40 bg-primary/5 px-3 py-2.5 text-sm text-text transition-colors hover:bg-primary/10 disabled:opacity-70"
+            >
+              {organizing ? (
+                <Loader2 size={16} aria-hidden="true" className="shrink-0 animate-spin text-primary" />
+              ) : (
+                <Sparkles size={16} aria-hidden="true" className="shrink-0 text-primary" />
+              )}
+              <span className="text-left">
+                {organizing
+                  ? 'Organizando con IA…'
+                  : `Organizar ${uncategorizedCount} sin categoría con IA`}
+              </span>
+            </button>
+          ) : null}
         </div>
       ) : null}
 

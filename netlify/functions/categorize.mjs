@@ -33,11 +33,11 @@ export default async (req) => {
 
   const prompt =
     `Producto: "${name}"\n\n` +
-    'Categorías disponibles (elige SOLO una de esta lista, tal cual está escrita):\n' +
+    'Categorías disponibles (elige SIEMPRE una, la que mejor encaje):\n' +
     categories.map((c) => `- ${c}`).join('\n') +
-    '\n\nDevuelve un objeto JSON {"categoria":"<nombre EXACTO de la lista, o cadena vacía si ' +
-    'ninguna encaja claramente>"}. No inventes categorías nuevas ni uses ninguna que no esté ' +
-    'en la lista.';
+    '\n\nDevuelve un objeto JSON {"categoria":"<nombre EXACTO de una categoría de la lista>"}. ' +
+    'Elige siempre la más adecuada aunque no sea perfecta; NO dejes la categoría vacía. No ' +
+    'inventes categorías nuevas ni uses ninguna que no esté en la lista.';
 
   try {
     const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
