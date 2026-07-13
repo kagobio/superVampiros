@@ -11,6 +11,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { useFiltersStore } from '@/stores/filters.store';
+import { ReorderWithAiButton } from './components/ReorderWithAiButton';
 
 interface Item {
   icon: LucideIcon;
@@ -83,6 +84,7 @@ export function MorePage() {
   return (
     <div className="space-y-4">
       <h1 className="text-2xl">Más</h1>
+      <ReorderWithAiButton />
       <ul className="space-y-2">
         {items.map((item, i) => {
           const Icon = item.icon;
