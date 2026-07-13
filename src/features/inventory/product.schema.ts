@@ -20,6 +20,11 @@ export const productFormSchema = z.object({
     .number({ message: 'Introduce un número' })
     .min(0, 'No puede ser negativo')
     .max(999_999),
+  price: z
+    .number({ message: 'Introduce un número' })
+    .min(0, 'No puede ser negativo')
+    .max(999_999)
+    .nullable(),
   favorite: z.boolean(),
   expiryDate: z.string(),
   notes: z.string().max(1000, 'Máximo 1000 caracteres'),

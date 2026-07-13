@@ -133,6 +133,22 @@ export function ProductForm({
       </div>
 
       <div className="grid grid-cols-2 gap-3">
+        <Field label="Precio (€)" hint="Por unidad, para el gasto" error={errors.price?.message}>
+          {({ id, describedBy }) => (
+            <Input
+              id={id}
+              aria-describedby={describedBy}
+              type="number"
+              inputMode="decimal"
+              min={0}
+              step="0.01"
+              placeholder="—"
+              {...register('price', {
+                setValueAs: (v) => (v === '' || v == null ? null : Number(v)),
+              })}
+            />
+          )}
+        </Field>
         <Field label="Stock mínimo" hint="Aviso al bajar de aquí" error={errors.minStock?.message}>
           {({ id, describedBy }) => (
             <Input
@@ -145,10 +161,11 @@ export function ProductForm({
             />
           )}
         </Field>
-        <Field label="Caducidad">
-          {({ id }) => <Input id={id} type="date" {...register('expiryDate')} />}
-        </Field>
       </div>
+
+      <Field label="Caducidad">
+        {({ id }) => <Input id={id} type="date" {...register('expiryDate')} />}
+      </Field>
 
       <ExpiryHint control={control} now={now} />
 

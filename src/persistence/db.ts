@@ -51,6 +51,19 @@ export class VampireDB extends Dexie {
       products:
         'id, name, categoryId, locationId, favorite, expiryDate, updatedAt, deletedAt, barcode, *tagIds',
     });
+
+    // v3: campo `price` (sin índice). Se rellena a null en los productos ya
+    // existentes para que el gasto y la sync partan de un valor explícito.
+    this.version(3)
+      .stores({})
+      .upgrade(async (tx) => {
+        await tx
+          .table('products')
+          .toCollection()
+          .modify((p: Product) => {
+            if (p.price === undefined) p.price = null;
+          });
+      });
   }
 }
 
