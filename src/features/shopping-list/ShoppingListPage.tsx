@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react';
-import { Check, Plus, ShoppingCart, Trash2 } from 'lucide-react';
+import { Check, Clock, Plus, ShoppingCart, Trash2 } from 'lucide-react';
 import type { Product } from '@/domain/product/product.types';
 import { productsToRestock, suggestedBuyQuantity } from '@/domain/shopping/shopping.rules';
+import { productsRunningLow } from '@/domain/inventory/prediction';
 import type { ShoppingListItem } from '@/domain/shopping/shopping.types';
 import { shoppingListService } from '@/services/shopping/shopping-list.service';
 import { Input } from '@/components/ui/Input';
@@ -11,16 +12,34 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { cn } from '@/lib/cn';
 import { useCategories, useUnits } from '@/hooks/useTaxonomies';
 import { useProducts } from '@/features/inventory/hooks/useProducts';
+import { useHistory } from '@/features/history/hooks/useHistory';
 import { useManualItems } from './hooks/useShoppingList';
 
 const NO_CATEGORY = '__none__';
+
+/** Texto amable de cuándo se agota un producto según su ritmo de consumo. */
+function describeDaysLeft(days: number): string {
+  const d = Math.round(days);
+  if (d <= 0) return 'se acaba hoy';
+  if (d === 1) return 'se acaba mañana';
+  return `se acaba en ~${d} días`;
+}
 
 export function ShoppingListPage() {
   const products = useProducts();
   const categories = useCategories();
   const units = useUnits();
   const manualItems = useManualItems();
+  const events = useHistory(1000);
+  const [now] = useState(() => Date.now());
   const [newName, setNewName] = useState('');
+
+  // Reposición predictiva: productos que se agotarán pronto por su ritmo de
+  // consumo, aunque todavía no estén bajo mínimo.
+  const upcoming = useMemo(
+    () => productsRunningLow(products, events, now),
+    [products, events, now],
+  );
 
   const categoryById = useMemo(() => new Map(categories.map((c) => [c.id, c.name])), [categories]);
   const unitById = useMemo(() => new Map(units.map((u) => [u.id, u.abbreviation])), [units]);
@@ -52,7 +71,7 @@ export function ShoppingListPage() {
     setNewName('');
   };
 
-  const isEmpty = autoCount === 0 && manualItems.length === 0;
+  const isEmpty = autoCount === 0 && manualItems.length === 0 && upcoming.length === 0;
 
   return (
     <div className="space-y-4">
@@ -117,6 +136,37 @@ export function ShoppingListPage() {
               </ul>
             </div>
           ))}
+        </section>
+      ) : null}
+
+      {upcoming.length > 0 ? (
+        <section aria-label="Se agotará pronto" className="space-y-2">
+          <h2 className="flex items-center gap-1.5 text-sm font-medium text-text">
+            <Clock size={15} aria-hidden="true" className="text-warning" />
+            Se agotará pronto <span className="text-muted">· {upcoming.length}</span>
+          </h2>
+          <ul className="space-y-2">
+            {upcoming.map(({ product: p, prediction }) => (
+              <li
+                key={p.id}
+                className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-3"
+              >
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate font-medium text-text">{p.name}</span>
+                  <span className="text-xs text-muted">
+                    {describeDaysLeft(prediction.daysLeft)} · quedan {p.quantity}
+                    {p.unitId ? ` ${unitById.get(p.unitId) ?? ''}` : ''}
+                  </span>
+                </span>
+                <IconButton
+                  icon={Check}
+                  label={`Marcar ${p.name} como comprado`}
+                  variant="solid"
+                  onClick={() => void shoppingListService.buyProduct(p.id)}
+                />
+              </li>
+            ))}
+          </ul>
         </section>
       ) : null}
 
