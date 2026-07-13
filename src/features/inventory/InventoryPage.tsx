@@ -25,6 +25,7 @@ import { useSettings } from '@/hooks/useSettings';
 import { useFiltersStore } from '@/stores/filters.store';
 import { useCollapsedCategories } from '@/stores/collapsed-categories.store';
 import { ScannerSheet } from '@/features/scan/ScannerSheet';
+import { ReorderWithAiButton } from '@/features/settings/components/ReorderWithAiButton';
 import { useProducts } from './hooks/useProducts';
 import { GroupedProductList } from './components/GroupedProductList';
 import { ProductFormSheet } from './components/ProductFormSheet';
@@ -239,6 +240,7 @@ export function InventoryPage() {
               </span>
             </button>
           ) : null}
+          <ReorderWithAiButton variant="compact" />
         </div>
       ) : null}
 
