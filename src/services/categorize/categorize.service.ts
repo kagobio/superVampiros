@@ -23,13 +23,15 @@ export function parseCategory(text: string, allowed: string[]): string | null {
   const needle = normalizeText(name);
   const exact = allowed.find((a) => normalizeText(a) === needle);
   if (exact) return exact;
-  // Red de seguridad: la IA a veces añade matices ("Bebidas frías"); casamos por
-  // inclusión en cualquier sentido si el texto es suficientemente largo.
-  if (needle.length < 3) return null;
+  // Red de seguridad: si la IA añade matices ("Limpieza del hogar"), casamos solo
+  // cuando el nombre de la categoría aparece como palabra/frase COMPLETA. Así se
+  // evitan falsos positivos por subcadenas sueltas.
   return (
     allowed.find((a) => {
       const an = normalizeText(a);
-      return an.length >= 3 && (needle.includes(an) || an.includes(needle));
+      if (an.length < 3) return false;
+      const escaped = an.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      return new RegExp(`(^|\\s)${escaped}(\\s|$)`).test(needle);
     }) ?? null
   );
 }
