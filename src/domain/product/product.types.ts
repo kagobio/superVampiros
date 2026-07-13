@@ -22,6 +22,8 @@ export interface Product extends Entity {
   tagIds: Id[];
   /** Código de barras (EAN/UPC) para escanear y reconocer el producto. */
   barcode: string | null;
+  /** Precio por unidad en euros (para calcular el gasto). `null` = desconocido. */
+  price: number | null;
 }
 
 /** Estado de stock derivado (no se persiste). */
@@ -45,4 +47,5 @@ export interface NewProductInput {
   color?: string;
   tagIds?: Id[];
   barcode?: string | null;
+  price?: number | null;
 }

@@ -7,6 +7,7 @@ import type { NewProductInput, Product } from '@/domain/product/product.types';
 import { newId } from '@/domain/shared/ids';
 import { systemClock, type Clock } from '@/domain/shared/time';
 import { DEFAULT_PRODUCT_COLOR } from '@/config/constants';
+import { round2 } from '@/lib/money';
 import { historyService, type HistoryService } from '@/services/history/history.service';
 
 /**
@@ -44,6 +45,7 @@ export class InventoryService {
       color: input.color ?? DEFAULT_PRODUCT_COLOR,
       tagIds: input.tagIds ?? [],
       barcode: input.barcode ?? null,
+      price: input.price ?? null,
     };
     const product = buildProduct(newId(), this.clock.now(), fields);
     await this.repo.create(product);
@@ -100,10 +102,14 @@ export class InventoryService {
     if (quantity === product.quantity) return product;
     const next = await this.repo.update(id, { quantity });
     if (next) {
-      await this.history.record(delta > 0 ? 'purchase' : 'consume', 'product', id, {
+      const isPurchase = delta > 0;
+      // Coste de la compra (para el gasto mensual), solo si hay precio.
+      const cost = isPurchase && product.price != null ? round2(product.price * delta) : undefined;
+      await this.history.record(isPurchase ? 'purchase' : 'consume', 'product', id, {
         name: next.name,
         delta,
         quantity,
+        ...(cost != null ? { cost } : {}),
       });
     }
     return next;
@@ -158,10 +164,12 @@ export class InventoryService {
       lastPurchaseAt: now,
     });
     if (next) {
+      const cost = product.price != null ? round2(product.price * add) : undefined;
       await this.history.record('purchase', 'product', id, {
         name: next.name,
         delta: add,
         quantity: next.quantity,
+        ...(cost != null ? { cost } : {}),
       });
     }
     return next;
