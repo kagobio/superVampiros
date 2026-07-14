@@ -14,6 +14,7 @@ import { useCategories, useUnits } from '@/hooks/useTaxonomies';
 import { useProducts } from '@/features/inventory/hooks/useProducts';
 import { useHistory } from '@/features/history/hooks/useHistory';
 import { useManualItems } from './hooks/useShoppingList';
+import { ReceiptScanner } from './components/ReceiptScanner';
 
 const NO_CATEGORY = '__none__';
 
@@ -93,6 +94,8 @@ export function ShoppingListPage() {
           Añadir
         </Button>
       </div>
+
+      <ReceiptScanner />
 
       {isEmpty ? (
         <EmptyState
