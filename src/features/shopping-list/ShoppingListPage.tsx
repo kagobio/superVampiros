@@ -15,6 +15,7 @@ import { useProducts } from '@/features/inventory/hooks/useProducts';
 import { useHistory } from '@/features/history/hooks/useHistory';
 import { useManualItems } from './hooks/useShoppingList';
 import { ReceiptScanner } from './components/ReceiptScanner';
+import { VoiceAdd } from './components/VoiceAdd';
 
 const NO_CATEGORY = '__none__';
 
@@ -95,7 +96,10 @@ export function ShoppingListPage() {
         </Button>
       </div>
 
-      <ReceiptScanner />
+      <div className="grid grid-cols-2 gap-2">
+        <ReceiptScanner />
+        <VoiceAdd />
+      </div>
 
       {isEmpty ? (
         <EmptyState
