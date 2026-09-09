@@ -16,6 +16,7 @@ export const SYNCED_TABLES: Record<string, Table<Entity, string>> = {
   shopping: db.shoppingItems as unknown as Table<Entity, string>,
   recipe: db.recipes as unknown as Table<Entity, string>,
   pack: db.packs as unknown as Table<Entity, string>,
+  mealPlan: db.mealPlans as unknown as Table<Entity, string>,
 };
 
 export const SYNCED_TYPES = Object.keys(SYNCED_TABLES);

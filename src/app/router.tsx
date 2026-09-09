@@ -4,6 +4,7 @@ import { DashboardPage } from '@/features/dashboard/DashboardPage';
 import { InventoryPage } from '@/features/inventory/InventoryPage';
 import { ShoppingListPage } from '@/features/shopping-list/ShoppingListPage';
 import { RecipesPage } from '@/features/recipes/RecipesPage';
+import { MealPlansPage } from '@/features/meal-plans/MealPlansPage';
 import { MorePage } from '@/features/settings/MorePage';
 import { TaxonomySettingsPage } from '@/features/settings/TaxonomySettingsPage';
 import { HistoryPage } from '@/features/history/HistoryPage';
@@ -21,6 +22,7 @@ export const router = createBrowserRouter([
       { path: 'inventario', element: <InventoryPage /> },
       { path: 'compra', element: <ShoppingListPage /> },
       { path: 'recetas', element: <RecipesPage /> },
+      { path: 'recetas/menus', element: <MealPlansPage /> },
       { path: 'mas', element: <MorePage /> },
       { path: 'ajustes/taxonomias', element: <TaxonomySettingsPage /> },
       { path: 'historial', element: <HistoryPage /> },

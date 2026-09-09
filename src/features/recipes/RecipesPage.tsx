@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { ChefHat, Sparkles, Utensils } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { CalendarDays, ChefHat, Sparkles, Utensils } from 'lucide-react';
 import type { Recipe } from '@/domain/recipe/recipe.types';
 import { normalizeText } from '@/domain/inventory/inventory-view';
 import { recipeService } from '@/services/recipe/recipe.service';
@@ -14,6 +15,7 @@ import { RecipeEditorSheet } from './components/RecipeEditorSheet';
 import { RecipeChatSheet } from './components/RecipeChatSheet';
 
 export function RecipesPage() {
+  const navigate = useNavigate();
   const recipes = useRecipes();
   const products = useProducts();
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -89,6 +91,11 @@ export function RecipesPage() {
           Chef IA · recetas con lo que tengo
         </Button>
       ) : null}
+
+      <Button variant="secondary" className="w-full" onClick={() => navigate('/recetas/menus')}>
+        <CalendarDays size={18} aria-hidden="true" />
+        Menús semanales
+      </Button>
 
       {recipes.length === 0 ? (
         <EmptyState

@@ -143,7 +143,8 @@ fase nueva sin cerrar (terminar + probar + revisar) la anterior. Leyenda:
 - [ ] IA: sugerencia de recetas según inventario.
 - [ ] IA: generación automática de la lista de la compra.
 - [ ] Control del gasto mensual.
-- [ ] Planificador semanal de comidas + calendario de caducidades.
+- [x] **Menú semanal** (planificador de comidas): varios menús guardados, cada uno con comida y cena por día (Lun–Dom). De las recetas asignadas se derivan, sumados, todos los ingredientes necesarios (con opción de copiar la lista). Nueva entidad `MealPlan` (Dexie v4) + servicio + sync + import/export. Enlace desde Recetas.
+- [ ] Planificador semanal: calendario de caducidades.
 - [ ] Notificaciones inteligentes.
 - [ ] Widgets móvil, Apple Shortcuts / Android Quick Settings.
 - [ ] API pública.

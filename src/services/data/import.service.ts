@@ -79,6 +79,7 @@ export async function importJson(text: string): Promise<ImportResult> {
     shoppingItems: Versioned[];
     recipes: Versioned[];
     packs: Versioned[];
+    mealPlans?: Versioned[];
     history: Versioned[];
     settings: Versioned | null;
   };
@@ -95,6 +96,7 @@ export async function importJson(text: string): Promise<ImportResult> {
       db.shoppingItems,
       db.recipes,
       db.packs,
+      db.mealPlans,
       db.history,
       db.settings,
     ],
@@ -113,6 +115,10 @@ export async function importJson(text: string): Promise<ImportResult> {
       );
       changed += await mergeTable(db.recipes as unknown as Table<Versioned, string>, d.recipes);
       changed += await mergeTable(db.packs as unknown as Table<Versioned, string>, d.packs);
+      changed += await mergeTable(
+        db.mealPlans as unknown as Table<Versioned, string>,
+        d.mealPlans ?? [],
+      );
       // El historial es append-only: solo añadimos eventos que no existan.
       for (const event of d.history) {
         if (!(await db.history.get(event.id))) {
