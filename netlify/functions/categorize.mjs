@@ -5,7 +5,7 @@
 // Petición: { name: string, categories: string[] }
 // Respuesta: { categoria: string }  (nombre exacto de la lista, o "")
 
-const MODEL = process.env.GROQ_MODEL || 'llama-3.3-70b-versatile';
+const MODEL = process.env.GROQ_MODEL || 'openai/gpt-oss-120b';
 
 export default async (req) => {
   if (req.method !== 'POST') {
