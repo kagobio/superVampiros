@@ -67,7 +67,7 @@ de Netlify** que mantiene la clave oculta.
 2. En **Netlify → Environment variables**, añade `GROQ_API_KEY` (⚠️ **sin** el
    prefijo `VITE_`: es de servidor, no debe llegar al navegador).
 3. Redespliega. La función serverless está en `netlify/functions/suggest-recipes.mjs`.
-   El modelo se puede cambiar con `GROQ_MODEL` (por defecto `llama-3.3-70b-versatile`).
+   El modelo se puede cambiar con `GROQ_MODEL` (por defecto `openai/gpt-oss-120b`).
 
 Sin la clave, la app funciona igual; solo esa sugerencia mostrará un aviso de que
 no está configurada.

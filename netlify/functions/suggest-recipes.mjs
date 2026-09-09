@@ -1,5 +1,5 @@
 // Función serverless (Netlify) del "Chef IA": chat de recetas basado en el
-// inventario. Usa Groq (capa gratuita, sin tarjeta) con un modelo Llama. La
+// inventario. Usa Groq (capa gratuita, sin tarjeta) con un modelo abierto. La
 // clave (GROQ_API_KEY) vive en el servidor, nunca en el cliente.
 //
 // Petición: { items: string[], messages: [{ role, content }] }
@@ -8,7 +8,7 @@
 //    JSON del turno anterior, para mantener el contexto conversacional.
 // Respuesta: { mensaje, recetas: [...] }.
 
-const MODEL = process.env.GROQ_MODEL || 'llama-3.3-70b-versatile';
+const MODEL = process.env.GROQ_MODEL || 'openai/gpt-oss-120b';
 
 const systemPrompt = (items) =>
   'Eres el "Chef IA", un ayudante de cocina español, cercano y práctico.\n' +
