@@ -20,6 +20,7 @@ export async function buildBackup(): Promise<BackupFile> {
     shoppingItems,
     recipes,
     packs,
+    mealPlans,
     history,
     settings,
   ] = await Promise.all([
@@ -31,6 +32,7 @@ export async function buildBackup(): Promise<BackupFile> {
     db.shoppingItems.toArray(),
     db.recipes.toArray(),
     db.packs.toArray(),
+    db.mealPlans.toArray(),
     db.history.toArray(),
     db.settings.get('settings'),
   ]);
@@ -44,6 +46,7 @@ export async function buildBackup(): Promise<BackupFile> {
     shoppingItems,
     recipes,
     packs,
+    mealPlans,
     history,
     settings: settings ?? null,
   };

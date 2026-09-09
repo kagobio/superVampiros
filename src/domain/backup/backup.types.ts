@@ -6,6 +6,7 @@ import type { Tag } from '@/domain/tag/tag.types';
 import type { ShoppingListItem } from '@/domain/shopping/shopping.types';
 import type { Recipe } from '@/domain/recipe/recipe.types';
 import type { Pack } from '@/domain/pack/pack.types';
+import type { MealPlan } from '@/domain/meal-plan/meal-plan.types';
 import type { HistoryEvent } from '@/domain/history/history.types';
 import type { Settings } from '@/domain/settings/settings.types';
 
@@ -22,6 +23,7 @@ export interface BackupData {
   shoppingItems: ShoppingListItem[];
   recipes: Recipe[];
   packs: Pack[];
+  mealPlans: MealPlan[];
   history: HistoryEvent[];
   settings: Settings | null;
 }

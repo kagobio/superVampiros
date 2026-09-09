@@ -11,6 +11,7 @@ export type EntityType =
   | 'shopping'
   | 'recipe'
   | 'pack'
+  | 'mealPlan'
   | 'settings';
 
 /** Tipo de operación registrada. */

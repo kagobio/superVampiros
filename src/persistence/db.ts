@@ -7,6 +7,7 @@ import type { Tag } from '@/domain/tag/tag.types';
 import type { ShoppingListItem } from '@/domain/shopping/shopping.types';
 import type { Recipe } from '@/domain/recipe/recipe.types';
 import type { Pack } from '@/domain/pack/pack.types';
+import type { MealPlan } from '@/domain/meal-plan/meal-plan.types';
 import type { HistoryEvent } from '@/domain/history/history.types';
 import type { Settings } from '@/domain/settings/settings.types';
 
@@ -24,6 +25,7 @@ export class VampireDB extends Dexie {
   shoppingItems!: Table<ShoppingListItem, string>;
   recipes!: Table<Recipe, string>;
   packs!: Table<Pack, string>;
+  mealPlans!: Table<MealPlan, string>;
   history!: Table<HistoryEvent, string>;
   settings!: Table<Settings, string>;
 
@@ -64,6 +66,11 @@ export class VampireDB extends Dexie {
             if (p.price === undefined) p.price = null;
           });
       });
+
+    // v4: menús semanales (planificador de comidas). Nueva tabla, sin migración.
+    this.version(4).stores({
+      mealPlans: 'id, name, updatedAt, deletedAt',
+    });
   }
 }
 

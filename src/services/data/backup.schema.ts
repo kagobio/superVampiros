@@ -25,6 +25,8 @@ export const backupFileSchema = z.object({
     shoppingItems: entityArray,
     recipes: entityArray,
     packs: entityArray,
+    // Opcional: los backups anteriores a los menús semanales no lo incluyen.
+    mealPlans: entityArray.optional(),
     history: entityArray,
     settings: z.object({ id: z.string() }).nullable(),
   }),
