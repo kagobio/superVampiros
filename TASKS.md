@@ -143,7 +143,8 @@ fase nueva sin cerrar (terminar + probar + revisar) la anterior. Leyenda:
 - [ ] IA: sugerencia de recetas según inventario.
 - [ ] IA: generación automática de la lista de la compra.
 - [ ] Control del gasto mensual.
-- [x] **Menú semanal** (planificador de comidas): varios menús guardados, cada uno con comida y cena por día (Lun–Dom). De las recetas asignadas se derivan, sumados, todos los ingredientes necesarios (con opción de copiar la lista). Nueva entidad `MealPlan` (Dexie v4) + servicio + sync + import/export. Enlace desde Recetas.
+- [x] **Menú semanal** (planificador de comidas): varios menús guardados, cada uno con comida y cena por día (Lun–Dom). De las recetas asignadas se derivan, sumados, todos los ingredientes necesarios (con opción de copiar la lista y de **añadir a la compra solo lo que falta** según el stock). Nueva entidad `MealPlan` (Dexie v4) + servicio + sync + import/export. Enlace desde Recetas.
+- [x] **IA: generar el menú semanal** según preferencias (texto libre + chips). La IA (Groq, función `suggest-menu`) propone comida y cena de cada día priorizando el inventario; se crean las recetas automáticamente y se abre el menú para revisarlo. Se mantiene también el modo manual.
 - [ ] Planificador semanal: calendario de caducidades.
 - [ ] Notificaciones inteligentes.
 - [ ] Widgets móvil, Apple Shortcuts / Android Quick Settings.
