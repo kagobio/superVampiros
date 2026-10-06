@@ -31,7 +31,7 @@ export function applyTheme(preference: ThemePreference): void {
 export const useThemeStore = create<ThemeState>()(
   persist(
     (set, get) => ({
-      preference: 'dark',
+      preference: 'light',
       setPreference: (preference) => {
         applyTheme(preference);
         set({ preference });

@@ -10,15 +10,17 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const base =
-  'inline-flex items-center justify-center gap-2 rounded-xl font-medium transition ' +
+  'inline-flex items-center justify-center gap-2 rounded-xl font-medium tracking-[-0.01em] transition ' +
   'select-none active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 ' +
   'motion-reduce:active:scale-100 focus-visible:outline-2 focus-visible:outline-offset-2';
 
 const variants: Record<Variant, string> = {
-  primary: 'bg-primary text-primary-fg hover:bg-primary-hover',
-  secondary: 'bg-surface-2 text-text hover:bg-border',
+  primary:
+    'bg-primary text-primary-fg shadow-[0_1px_2px_rgb(60_24_32/0.18),0_8px_20px_-10px_rgb(60_24_32/0.5)] hover:bg-primary-hover',
+  secondary: 'bg-surface-2 text-text border border-border hover:border-primary/40 hover:bg-surface',
   ghost: 'bg-transparent text-text hover:bg-surface-2',
-  danger: 'bg-danger text-primary-fg hover:opacity-90',
+  danger:
+    'bg-danger text-primary-fg shadow-[0_1px_2px_rgb(60_24_32/0.18),0_8px_20px_-10px_rgb(120_20_32/0.5)] hover:opacity-90',
 };
 
 // Objetivos táctiles cómodos: mínimo 44px de alto en `md`/`lg` (accesibilidad).

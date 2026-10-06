@@ -1,8 +1,10 @@
 @import 'tailwindcss';
 
 /*
- * Alimentos Vampíricos — Sistema de diseño
- * Tokens CSS-first (Tailwind v4). Los colores semánticos se referencian con
+ * Alimentos Vampíricos — Sistema de diseño «Carmesí editorial»
+ * Tokens CSS-first (Tailwind v4). Rediseño completo: de la estética oscura y
+ * sanguínea a un look editorial, cálido y luminoso (claro por defecto) con un
+ * único acento vino sobrio. Los colores semánticos se referencian con
  * `@theme inline` para que cambien en caliente al alternar `data-theme`.
  */
 
@@ -10,67 +12,80 @@
 
 /* ---- Paleta cruda (no usar directamente en componentes) ---- */
 :root {
-  --vamp-black: #0b0b0d;
-  --vamp-ink: #141317;
-  --vamp-slate: #1c1a20;
-  --vamp-border: #232026;
-  --vamp-burgundy: #5b0e14;
-  --vamp-garnet: #7a1420;
-  --vamp-blood: #b0121b;
-  --vamp-blood-bright: #c81e2a;
-  --vamp-bone: #f5f1e9;
-  --vamp-muted: #a7a0aa;
-  --vamp-green: #3fb27f;
-  --vamp-amber: #e0932f;
+  /* Neutros cálidos (papel / tinta) */
+  --paper: #faf7f1;
+  --paper-2: #f2ede4;
+  --paper-line: #e6ddce;
+  --ink: #211b1d;
+  --ink-soft: #6c635e;
+
+  /* Neutros cálidos oscuros (carbón ciruela) */
+  --coal: #16121a;
+  --coal-2: #1d1822;
+  --coal-3: #27212d;
+  --coal-line: #362e3d;
+  --chalk: #f2ebe6;
+  --chalk-soft: #a99daa;
+
+  /* Acento vino + funcionales */
+  --wine: #8c1d2b;
+  --wine-bright: #a62736;
+  --wine-glow: #c13a49;
+  --wine-glow-hi: #d6505e;
+  --plum: #7a4a66;
+  --olive: #2f8f63;
+  --olive-bright: #46c08a;
+  --saffron: #b5741f;
+  --saffron-bright: #e3a24a;
+  --cherry: #c22436;
+  --cherry-bright: #e5565f;
 }
 
-/* ---- Tokens semánticos: tema oscuro (por defecto) ---- */
+/* ---- Tokens semánticos: tema claro (por defecto) ---- */
 :root,
-[data-theme='dark'] {
-  --bg: var(--vamp-black);
-  --surface: var(--vamp-ink);
-  --surface-2: var(--vamp-slate);
-  --border: var(--vamp-border);
-  --text: var(--vamp-bone);
-  --muted: var(--vamp-muted);
-  /* Granate profundo como color principal (más sobrio); el rojo vivo se reserva
-     para acentos y alertas. */
-  --primary: var(--vamp-garnet);
-  --primary-hover: var(--vamp-blood);
-  --primary-fg: #fdf3f3;
-  --accent: var(--vamp-blood);
-  --danger: var(--vamp-blood-bright);
-  --success: var(--vamp-green);
-  --warning: var(--vamp-amber);
-  --ring: color-mix(in oklab, var(--vamp-garnet) 55%, transparent);
-  --shadow: 0 10px 34px -16px rgb(0 0 0 / 0.65);
-  color-scheme: dark;
+[data-theme='light'] {
+  --bg: var(--paper);
+  --surface: #ffffff;
+  --surface-2: var(--paper-2);
+  --border: var(--paper-line);
+  --text: var(--ink);
+  --muted: var(--ink-soft);
+  --primary: var(--wine);
+  --primary-hover: var(--wine-bright);
+  --primary-fg: #fff5f3;
+  --accent: var(--plum);
+  --danger: var(--cherry);
+  --success: var(--olive);
+  --warning: var(--saffron);
+  --ring: color-mix(in oklab, var(--wine) 42%, transparent);
+  --shadow: 0 1px 2px rgb(40 20 25 / 0.05), 0 14px 44px -22px rgb(60 24 32 / 0.26);
+  color-scheme: light;
 }
 
-/* ---- Tokens semánticos: tema claro ---- */
-[data-theme='light'] {
-  --bg: #f7f4ef;
-  --surface: #ffffff;
-  --surface-2: #f0ece4;
-  --border: #e2ddd3;
-  --text: #1a1416;
-  --muted: #6b6470;
-  --primary: var(--vamp-garnet);
-  --primary-hover: var(--vamp-blood);
-  --primary-fg: #fff5f5;
-  --accent: var(--vamp-burgundy);
-  --danger: var(--vamp-blood);
-  --success: #2f8f63;
-  --warning: #b5741f;
-  --ring: color-mix(in oklab, var(--vamp-garnet) 45%, transparent);
-  --shadow: 0 8px 30px -18px rgb(60 20 25 / 0.35);
-  color-scheme: light;
+/* ---- Tokens semánticos: tema oscuro ---- */
+[data-theme='dark'] {
+  --bg: var(--coal);
+  --surface: var(--coal-2);
+  --surface-2: var(--coal-3);
+  --border: var(--coal-line);
+  --text: var(--chalk);
+  --muted: var(--chalk-soft);
+  --primary: var(--wine-glow);
+  --primary-hover: var(--wine-glow-hi);
+  --primary-fg: #fff4f4;
+  --accent: #e2929f;
+  --danger: var(--cherry-bright);
+  --success: var(--olive-bright);
+  --warning: var(--saffron-bright);
+  --ring: color-mix(in oklab, var(--wine-glow) 58%, transparent);
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.4), 0 28px 64px -30px rgb(0 0 0 / 0.72);
+  color-scheme: dark;
 }
 
 /* ---- Exponer tokens como utilidades Tailwind ---- */
 @theme inline {
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
-  --font-display: 'Fraunces', Georgia, 'Times New Roman', serif;
+  --font-display: 'Instrument Serif', 'Fraunces', Georgia, 'Times New Roman', serif;
 
   --color-bg: var(--bg);
   --color-surface: var(--surface);
@@ -86,9 +101,12 @@
   --color-success: var(--success);
   --color-warning: var(--warning);
 
-  --radius-lg: 0.875rem;
-  --radius-xl: 1.125rem;
-  --radius-2xl: 1.375rem;
+  /* Radios más amplios y editoriales. */
+  --radius-lg: 1rem;
+  --radius-xl: 1.25rem;
+  --radius-2xl: 1.75rem;
+
+  --shadow-soft: var(--shadow);
 }
 
 /* ---- Base ---- */
@@ -111,12 +129,14 @@
     text-rendering: optimizeLegibility;
   }
 
+  /* Títulos editoriales: serif de display con trazo fino y tracking justo. */
   h1,
   h2,
   h3 {
     font-family: var(--font-display);
-    font-weight: 500;
-    letter-spacing: -0.01em;
+    font-weight: 400;
+    letter-spacing: -0.005em;
+    line-height: 1.08;
   }
 
   :focus-visible {

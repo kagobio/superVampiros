@@ -2,24 +2,28 @@
 
 export const APP_NAME = 'Alimentos Vampíricos';
 
-/** Color por defecto para nuevos productos (granate). */
-export const DEFAULT_PRODUCT_COLOR = '#7A1420';
+/** Color por defecto para nuevos productos (vino sobrio). */
+export const DEFAULT_PRODUCT_COLOR = '#8C1D2B';
 
 /** Icono por defecto para nuevos productos ('' = icono de reserva del avatar). */
 export const DEFAULT_PRODUCT_ICON = '';
 
-/** Paleta de colores sugerida para el ColorPicker de productos/categorías. */
+/**
+ * Paleta de colores sugerida para el ColorPicker de productos/categorías.
+ * Curada para el sistema «Carmesí editorial»: tonos cálidos y naturales que
+ * conviven con el acento vino sin competir con él.
+ */
 export const PALETTE = [
-  '#B0121B',
-  '#7A1420',
-  '#5B0E14',
-  '#C81E2A',
-  '#E0932F',
-  '#3FB27F',
-  '#3B82C4',
-  '#8B5CF6',
-  '#A7A0AA',
-  '#141317',
+  '#8C1D2B',
+  '#C2673F',
+  '#D99A2B',
+  '#5E8C3F',
+  '#2F7D7A',
+  '#4A5A8C',
+  '#7A4A66',
+  '#A7746A',
+  '#6C635E',
+  '#211B1D',
 ] as const;
 
 /** Retardo (ms) del debounce para la búsqueda en tiempo real. */
