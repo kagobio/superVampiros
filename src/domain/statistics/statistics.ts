@@ -140,6 +140,77 @@ export function spendSummary(events: HistoryEvent[], now: number, monthsBack = 6
   };
 }
 
+/** Producto comprado en un mes (unidades + coste acumulados). */
+export interface PurchasedProduct {
+  id: string;
+  name: string;
+  /** Unidades compradas en el mes. */
+  units: number;
+  /** Gasto total en el mes (€); 0 si no se conocía el precio. */
+  cost: number;
+  /** Número de compras registradas. */
+  count: number;
+}
+
+/** Un mes con al menos una compra (para el selector de meses). */
+export interface PurchaseMonth {
+  key: string;
+  label: string;
+  total: number;
+  count: number;
+}
+
+/** Etiqueta larga de un mes a partir de su clave 'YYYY-MM' (p. ej. "octubre 2026"). */
+function monthLabel(key: string): string {
+  const [y, m] = key.split('-').map(Number);
+  const d = new Date(y ?? 1970, (m ?? 1) - 1, 1);
+  return d.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
+}
+
+/**
+ * Meses con al menos una compra, del más reciente al más antiguo, con su gasto
+ * total y el número de compras. Sirve para el selector de la vista mensual.
+ */
+export function purchaseMonths(events: HistoryEvent[]): PurchaseMonth[] {
+  const map = new Map<string, PurchaseMonth>();
+  for (const e of events) {
+    if (e.type !== 'purchase') continue;
+    const key = monthKeyOf(e.timestamp);
+    const cur = map.get(key) ?? { key, label: monthLabel(key), total: 0, count: 0 };
+    cur.total = round2(cur.total + payloadCost(e));
+    cur.count += 1;
+    map.set(key, cur);
+  }
+  return [...map.values()].sort((a, b) => (a.key < b.key ? 1 : -1));
+}
+
+/**
+ * Productos comprados en un mes concreto ('YYYY-MM'), agrupados por producto y
+ * ordenados por gasto (y unidades). Incluye productos sin precio conocido (coste
+ * 0) para que "lo que compramos" aparezca aunque falte el importe. Función pura.
+ */
+export function purchasesInMonth(events: HistoryEvent[], monthKey: string): PurchasedProduct[] {
+  const map = new Map<string, PurchasedProduct>();
+  for (const e of events) {
+    if (e.type !== 'purchase' || monthKeyOf(e.timestamp) !== monthKey) continue;
+    const cur = map.get(e.entityId) ?? {
+      id: e.entityId,
+      name: payloadName(e),
+      units: 0,
+      cost: 0,
+      count: 0,
+    };
+    cur.units += payloadMagnitude(e);
+    cur.cost = round2(cur.cost + payloadCost(e));
+    cur.count += 1;
+    cur.name = payloadName(e);
+    map.set(e.entityId, cur);
+  }
+  return [...map.values()].sort(
+    (a, b) => b.cost - a.cost || b.units - a.units || a.name.localeCompare(b.name, 'es'),
+  );
+}
+
 /** Número de eventos por tipo. */
 export function countByType(events: HistoryEvent[]): Partial<Record<HistoryEventType, number>> {
   const counts: Partial<Record<HistoryEventType, number>> = {};

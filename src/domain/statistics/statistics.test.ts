@@ -1,7 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { baseEntity } from '@/domain/shared/entity';
 import type { HistoryEvent, HistoryEventType } from '@/domain/history/history.types';
-import { countByType, spendSummary, topConsumed, topPurchased } from './statistics';
+import {
+  countByType,
+  purchaseMonths,
+  purchasesInMonth,
+  spendSummary,
+  topConsumed,
+  topPurchased,
+} from './statistics';
 
 let seq = 0;
 function event(
@@ -95,5 +102,28 @@ describe('spendSummary', () => {
     expect(s.topThisMonth[0]).toMatchObject({ id: 'leche', total: 4 });
     expect(s.topThisMonth[1]).toMatchObject({ id: 'pan', total: 1 });
     expect(s.topThisMonth.find((r) => r.id === 'atun')).toBeUndefined();
+  });
+
+  describe('purchaseMonths', () => {
+    it('lista los meses con compras, del más reciente al más antiguo', () => {
+      const months = purchaseMonths(spendEvents);
+      expect(months.map((m) => m.key)).toEqual(['2026-06', '2026-05']);
+      expect(months[0]).toMatchObject({ key: '2026-06', total: 5, count: 4 });
+      expect(months[1]).toMatchObject({ key: '2026-05', total: 3, count: 1 });
+    });
+  });
+
+  describe('purchasesInMonth', () => {
+    it('agrupa los productos comprados en el mes por gasto y unidades', () => {
+      const items = purchasesInMonth(spendEvents, '2026-06');
+      // leche (4 €, 2 uds) va antes que pan (1 €); atún sin precio aparece al final.
+      expect(items.map((i) => i.id)).toEqual(['leche', 'pan', 'atun']);
+      expect(items[0]).toMatchObject({ id: 'leche', units: 2, cost: 4, count: 2 });
+      expect(items.find((i) => i.id === 'atun')).toMatchObject({ cost: 0, units: 1 });
+    });
+
+    it('devuelve vacío si no hubo compras ese mes', () => {
+      expect(purchasesInMonth(spendEvents, '2020-01')).toEqual([]);
+    });
   });
 });
