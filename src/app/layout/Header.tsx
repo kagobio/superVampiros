@@ -14,7 +14,7 @@ export function Header() {
       <div className="mx-auto flex max-w-2xl items-center justify-between px-4 py-3">
         <a href="/" className="flex items-center gap-2.5">
           <Logo className="text-primary" />
-          <span className="font-display text-2xl leading-none tracking-[0.01em] text-text">
+          <span className="text-[1.0625rem] font-semibold leading-none tracking-[-0.02em] text-text">
             {APP_NAME}
           </span>
         </a>

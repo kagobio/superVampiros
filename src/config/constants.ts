@@ -3,7 +3,7 @@
 export const APP_NAME = 'Alimentos Vampíricos';
 
 /** Color por defecto para nuevos productos (vino sobrio). */
-export const DEFAULT_PRODUCT_COLOR = '#8C1D2B';
+export const DEFAULT_PRODUCT_COLOR = '#93202E';
 
 /** Icono por defecto para nuevos productos ('' = icono de reserva del avatar). */
 export const DEFAULT_PRODUCT_ICON = '';
@@ -14,7 +14,7 @@ export const DEFAULT_PRODUCT_ICON = '';
  * conviven con el acento vino sin competir con él.
  */
 export const PALETTE = [
-  '#8C1D2B',
+  '#93202E',
   '#C2673F',
   '#D99A2B',
   '#5E8C3F',
