@@ -48,9 +48,9 @@ export function Stat({ label, value, icon: Icon, tone = 'default', onClick }: St
         onClick={onClick}
         className={cn(
           base,
-          'transition-[transform,border-color,background-color] duration-150',
-          'hover:-translate-y-0.5 hover:border-primary/30 active:translate-y-0',
-          'motion-reduce:transform-none motion-reduce:hover:translate-y-0',
+          'transition-[transform,border-color,background-color]',
+          'hover:-translate-y-0.5 hover:border-primary/30 active:scale-[0.98]',
+          'motion-reduce:transform-none motion-reduce:hover:translate-y-0 motion-reduce:active:scale-100',
           'focus-visible:outline-2 focus-visible:outline-offset-2',
         )}
       >

@@ -126,7 +126,7 @@ export function DashboardPage() {
                 <button
                   type="button"
                   onClick={() => navigate('/inventario')}
-                  className="group flex w-full items-center gap-3 rounded-xl border border-border bg-surface p-2.5 pr-2 text-left transition-colors hover:border-primary/30 hover:bg-surface-2"
+                  className="group flex w-full items-center gap-3 rounded-xl border border-border bg-surface p-2.5 pr-2 text-left transition-[transform,background-color,border-color] hover:border-primary/30 hover:bg-surface-2 active:scale-[0.99] motion-reduce:active:scale-100"
                 >
                   <span
                     aria-hidden="true"

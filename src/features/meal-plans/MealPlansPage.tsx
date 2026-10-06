@@ -63,7 +63,7 @@ export function MealPlansPage() {
       <button
         type="button"
         onClick={() => setGenOpen(true)}
-        className="group flex w-full items-center gap-3 rounded-2xl border border-primary/20 bg-primary/5 p-3.5 text-left shadow-soft transition-colors hover:border-primary/40 hover:bg-primary/10"
+        className="group flex w-full items-center gap-3 rounded-2xl border border-primary/20 bg-primary/5 p-3.5 text-left shadow-soft transition-[transform,background-color,border-color] hover:border-primary/40 hover:bg-primary/10 active:scale-[0.99] motion-reduce:active:scale-100"
       >
         <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-fg">
           <Sparkles size={20} aria-hidden="true" />
@@ -100,7 +100,7 @@ export function MealPlansPage() {
               <button
                 type="button"
                 onClick={() => openEditor(plan)}
-                className="group flex w-full items-center gap-3 rounded-2xl border border-border bg-surface p-3 text-left shadow-soft transition-colors hover:border-primary/30 hover:bg-surface-2"
+                className="group flex w-full items-center gap-3 rounded-2xl border border-border bg-surface p-3 text-left shadow-soft transition-[transform,background-color,border-color] hover:border-primary/30 hover:bg-surface-2 active:scale-[0.99] motion-reduce:active:scale-100"
               >
                 <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
                   <CalendarDays size={18} aria-hidden="true" />
