@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Copy, ShoppingCart, Trash2, UtensilsCrossed } from 'lucide-react';
+import { Copy, Moon, ShoppingCart, Sun, Trash2, UtensilsCrossed } from 'lucide-react';
 import type { MealPlan, MealSlot } from '@/domain/meal-plan/meal-plan.types';
 import {
   MEAL_SLOTS,
@@ -214,20 +214,28 @@ export function MealPlanEditorSheet({ open, onClose, plan }: MealPlanEditorSheet
               Aún no hay recetas. Pídele a la IA que te haga el menú, o crea recetas primero.
             </p>
           ) : (
-            <div className="grid grid-cols-[2.4rem_1fr_1fr] items-center gap-1.5">
-              <span />
-              <span className="text-center text-xs uppercase tracking-wide text-muted">Comida</span>
-              <span className="text-center text-xs uppercase tracking-wide text-muted">Cena</span>
-              {WEEK_DAYS.map((dayLabel, day) => (
-                <DayRow
-                  key={dayLabel}
-                  dayLabel={dayLabel}
-                  day={day}
-                  assignments={assignments}
-                  recipes={recipes}
-                  onChange={setSlot}
-                />
-              ))}
+            <div className="overflow-hidden rounded-2xl border border-border bg-surface shadow-soft">
+              <div className="grid grid-cols-[2.75rem_1fr_1fr] gap-1.5 border-b border-border bg-surface-2/60 px-2.5 py-2 text-[0.7rem] font-semibold uppercase tracking-wide text-muted">
+                <span />
+                <span className="flex items-center justify-center gap-1">
+                  <Sun size={12} aria-hidden="true" /> Comida
+                </span>
+                <span className="flex items-center justify-center gap-1">
+                  <Moon size={12} aria-hidden="true" /> Cena
+                </span>
+              </div>
+              <div className="divide-y divide-border">
+                {WEEK_DAYS.map((dayLabel, day) => (
+                  <DayRow
+                    key={dayLabel}
+                    dayLabel={dayLabel}
+                    day={day}
+                    assignments={assignments}
+                    recipes={recipes}
+                    onChange={setSlot}
+                  />
+                ))}
+              </div>
             </div>
           )}
         </div>
@@ -312,25 +320,29 @@ interface DayRowProps {
 
 function DayRow({ dayLabel, day, assignments, recipes, onChange }: DayRowProps) {
   return (
-    <>
-      <span className="text-xs font-medium text-muted" title={dayLabel}>
+    <div className="grid grid-cols-[2.75rem_1fr_1fr] items-center gap-1.5 px-2.5 py-2">
+      <span className="text-xs font-semibold capitalize text-muted" title={dayLabel}>
         {dayLabel.slice(0, 3)}
       </span>
-      {MEAL_SLOTS.map(({ slot, label }) => (
-        <Select
-          key={slot}
-          aria-label={`${label} del ${dayLabel}`}
-          value={assignments[slotKey(day, slot)] ?? ''}
-          onChange={(e) => onChange(day, slot, e.target.value)}
-        >
-          <option value="">—</option>
-          {recipes.map((r) => (
-            <option key={r.id} value={r.id}>
-              {r.name}
-            </option>
-          ))}
-        </Select>
-      ))}
-    </>
+      {MEAL_SLOTS.map(({ slot, label }) => {
+        const filled = Boolean(assignments[slotKey(day, slot)]);
+        return (
+          <Select
+            key={slot}
+            aria-label={`${label} del ${dayLabel}`}
+            value={assignments[slotKey(day, slot)] ?? ''}
+            onChange={(e) => onChange(day, slot, e.target.value)}
+            className={filled ? 'border-primary/40 font-medium text-text' : 'text-muted'}
+          >
+            <option value="">—</option>
+            {recipes.map((r) => (
+              <option key={r.id} value={r.id}>
+                {r.name}
+              </option>
+            ))}
+          </Select>
+        );
+      })}
+    </div>
   );
 }

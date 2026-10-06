@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, CalendarDays, Pencil, Sparkles } from 'lucide-react';
+import { ArrowLeft, CalendarDays, ChevronRight, Pencil, Sparkles } from 'lucide-react';
 import type { MealPlan } from '@/domain/meal-plan/meal-plan.types';
 import type { GeneratedMenu } from '@/services/meal-plan/suggest-menu.service';
 import { toast } from '@/stores/toast.store';
@@ -41,22 +41,45 @@ export function MealPlansPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-3">
         <Link
           to="/recetas"
           aria-label="Volver"
-          className="flex h-9 w-9 items-center justify-center rounded-xl text-muted hover:bg-surface-2 hover:text-text"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-muted transition-colors hover:bg-surface-2 hover:text-text"
         >
           <ArrowLeft size={20} aria-hidden="true" />
         </Link>
-        <h1 className="flex-1 text-2xl">Menús semanales</h1>
-        <span className="text-sm text-muted">{plans.length}</span>
+        <div className="min-w-0 flex-1">
+          <h1 className="text-[1.75rem]">Menús semanales</h1>
+          <p className="text-sm text-muted">Planifica la semana y mira qué te falta comprar.</p>
+        </div>
+        {plans.length > 0 ? (
+          <span className="shrink-0 rounded-full bg-surface-2 px-2.5 py-0.5 text-xs font-medium tabular-nums text-muted">
+            {plans.length}
+          </span>
+        ) : null}
       </div>
 
-      <Button className="w-full" onClick={() => setGenOpen(true)}>
-        <Sparkles size={18} aria-hidden="true" />
-        Generar menú con IA
-      </Button>
+      <button
+        type="button"
+        onClick={() => setGenOpen(true)}
+        className="group flex w-full items-center gap-3 rounded-2xl border border-primary/20 bg-primary/5 p-3.5 text-left shadow-soft transition-colors hover:border-primary/40 hover:bg-primary/10"
+      >
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-fg">
+          <Sparkles size={20} aria-hidden="true" />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block font-semibold text-text">Generar menú con IA</span>
+          <span className="block text-xs text-muted">
+            Según lo que tienes en casa y tus preferencias.
+          </span>
+        </span>
+        <ChevronRight
+          size={18}
+          aria-hidden="true"
+          className="shrink-0 text-primary transition-transform group-hover:translate-x-0.5"
+        />
+      </button>
 
       {plans.length === 0 ? (
         <EmptyState
@@ -73,23 +96,27 @@ export function MealPlansPage() {
       ) : (
         <ul className="space-y-2">
           {plans.map((plan) => (
-            <li
-              key={plan.id}
-              className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-3"
-            >
+            <li key={plan.id}>
               <button
                 type="button"
                 onClick={() => openEditor(plan)}
-                className="min-w-0 flex-1 text-left"
+                className="group flex w-full items-center gap-3 rounded-2xl border border-border bg-surface p-3 text-left shadow-soft transition-colors hover:border-primary/30 hover:bg-surface-2"
               >
-                <span className="flex items-center gap-2">
-                  <CalendarDays size={16} className="shrink-0 text-primary" aria-hidden="true" />
-                  <span className="truncate font-medium text-text">{plan.name}</span>
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                  <CalendarDays size={18} aria-hidden="true" />
                 </span>
-                <span className="mt-0.5 block text-xs text-muted">
-                  {plan.entries.length} comida{plan.entries.length === 1 ? '' : 's'} planificada
-                  {plan.entries.length === 1 ? '' : 's'}
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate font-semibold text-text">{plan.name}</span>
+                  <span className="mt-0.5 block text-xs text-muted">
+                    {plan.entries.length} comida{plan.entries.length === 1 ? '' : 's'} planificada
+                    {plan.entries.length === 1 ? '' : 's'}
+                  </span>
                 </span>
+                <ChevronRight
+                  size={18}
+                  aria-hidden="true"
+                  className="shrink-0 text-muted/60 transition-transform group-hover:translate-x-0.5"
+                />
               </button>
             </li>
           ))}
