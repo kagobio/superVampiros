@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { AnimatePresence } from 'framer-motion';
 import { Check, Clock, Plus, ShoppingCart, Trash2 } from 'lucide-react';
 import type { Product } from '@/domain/product/product.types';
 import { productsToRestock, suggestedBuyQuantity } from '@/domain/shopping/shopping.rules';
@@ -8,6 +9,7 @@ import { shoppingListService } from '@/services/shopping/shopping-list.service';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { IconButton } from '@/components/ui/IconButton';
+import { AnimatedListItem } from '@/components/ui/AnimatedListItem';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { cn } from '@/lib/cn';
 import { useCategories, useUnits } from '@/hooks/useTaxonomies';
@@ -116,26 +118,28 @@ export function ShoppingListPage() {
                 {categoryId === NO_CATEGORY ? 'Sin categoría' : categoryById.get(categoryId)}
               </p>
               <ul className="space-y-2">
-                {items.map((p) => (
-                  <li
-                    key={p.id}
-                    className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-3"
-                  >
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate font-medium text-text">{p.name}</span>
-                      <span className="text-xs text-muted">
-                        Comprar ×{suggestedBuyQuantity(p)}
-                        {p.unitId ? ` ${unitById.get(p.unitId) ?? ''}` : ''} · quedan {p.quantity}
+                <AnimatePresence initial={false}>
+                  {items.map((p) => (
+                    <AnimatedListItem
+                      key={p.id}
+                      className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-3"
+                    >
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate font-medium text-text">{p.name}</span>
+                        <span className="text-xs text-muted">
+                          Comprar ×{suggestedBuyQuantity(p)}
+                          {p.unitId ? ` ${unitById.get(p.unitId) ?? ''}` : ''} · quedan {p.quantity}
+                        </span>
                       </span>
-                    </span>
-                    <IconButton
-                      icon={Check}
-                      label={`Marcar ${p.name} como comprado`}
-                      variant="solid"
-                      onClick={() => void shoppingListService.buyProduct(p.id)}
-                    />
-                  </li>
-                ))}
+                      <IconButton
+                        icon={Check}
+                        label={`Marcar ${p.name} como comprado`}
+                        variant="solid"
+                        onClick={() => void shoppingListService.buyProduct(p.id)}
+                      />
+                    </AnimatedListItem>
+                  ))}
+                </AnimatePresence>
               </ul>
             </div>
           ))}
@@ -149,26 +153,28 @@ export function ShoppingListPage() {
             Se agotará pronto <span className="text-muted">· {upcoming.length}</span>
           </h2>
           <ul className="space-y-2">
-            {upcoming.map(({ product: p, prediction }) => (
-              <li
-                key={p.id}
-                className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-3"
-              >
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate font-medium text-text">{p.name}</span>
-                  <span className="text-xs text-muted">
-                    {describeDaysLeft(prediction.daysLeft)} · quedan {p.quantity}
-                    {p.unitId ? ` ${unitById.get(p.unitId) ?? ''}` : ''}
+            <AnimatePresence initial={false}>
+              {upcoming.map(({ product: p, prediction }) => (
+                <AnimatedListItem
+                  key={p.id}
+                  className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-3"
+                >
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate font-medium text-text">{p.name}</span>
+                    <span className="text-xs text-muted">
+                      {describeDaysLeft(prediction.daysLeft)} · quedan {p.quantity}
+                      {p.unitId ? ` ${unitById.get(p.unitId) ?? ''}` : ''}
+                    </span>
                   </span>
-                </span>
-                <IconButton
-                  icon={Check}
-                  label={`Marcar ${p.name} como comprado`}
-                  variant="solid"
-                  onClick={() => void shoppingListService.buyProduct(p.id)}
-                />
-              </li>
-            ))}
+                  <IconButton
+                    icon={Check}
+                    label={`Marcar ${p.name} como comprado`}
+                    variant="solid"
+                    onClick={() => void shoppingListService.buyProduct(p.id)}
+                  />
+                </AnimatedListItem>
+              ))}
+            </AnimatePresence>
           </ul>
         </section>
       ) : null}
@@ -177,17 +183,21 @@ export function ShoppingListPage() {
         <section aria-label="Añadidos a mano" className="space-y-2">
           <h2 className="text-sm font-medium text-text">Añadidos a mano</h2>
           <ul className="space-y-2">
-            {pendingManual.map((item) => (
-              <ManualRow key={item.id} item={item} unitById={unitById} />
-            ))}
+            <AnimatePresence initial={false}>
+              {pendingManual.map((item) => (
+                <ManualRow key={item.id} item={item} unitById={unitById} />
+              ))}
+            </AnimatePresence>
           </ul>
 
           {checkedManual.length > 0 ? (
             <div className="space-y-2 pt-1">
               <ul className="space-y-2">
-                {checkedManual.map((item) => (
-                  <ManualRow key={item.id} item={item} unitById={unitById} />
-                ))}
+                <AnimatePresence initial={false}>
+                  {checkedManual.map((item) => (
+                    <ManualRow key={item.id} item={item} unitById={unitById} />
+                  ))}
+                </AnimatePresence>
               </ul>
               <button
                 type="button"
@@ -211,7 +221,7 @@ interface ManualRowProps {
 
 function ManualRow({ item, unitById }: ManualRowProps) {
   return (
-    <li className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-3">
+    <AnimatedListItem className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-3">
       <button
         type="button"
         role="checkbox"
@@ -246,6 +256,6 @@ function ManualRow({ item, unitById }: ManualRowProps) {
         onClick={() => void shoppingListService.removeManual(item.id)}
         className="text-danger"
       />
-    </li>
+    </AnimatedListItem>
   );
 }

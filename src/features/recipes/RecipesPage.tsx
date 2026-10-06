@@ -6,8 +6,10 @@ import { recipeService } from '@/services/recipe/recipe.service';
 import { matchIngredientsToProducts } from '@/services/recipe/ingredient-match';
 import { type SuggestedRecipe } from '@/services/recipe/suggest.service';
 import { toast } from '@/stores/toast.store';
+import { AnimatePresence } from 'framer-motion';
 import { Fab } from '@/components/ui/Fab';
 import { Button } from '@/components/ui/Button';
+import { AnimatedListItem } from '@/components/ui/AnimatedListItem';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { useProducts } from '@/features/inventory/hooks/useProducts';
 import { useRecipes } from './hooks/useRecipes';
@@ -98,36 +100,38 @@ export function RecipesPage() {
         />
       ) : (
         <ul className="space-y-2">
-          {recipes.map((recipe) => (
-            <li
-              key={recipe.id}
-              className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-3"
-            >
-              <button
-                type="button"
-                onClick={() => openEditor(recipe)}
-                className="min-w-0 flex-1 text-left"
+          <AnimatePresence initial={false}>
+            {recipes.map((recipe) => (
+              <AnimatedListItem
+                key={recipe.id}
+                className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-3"
               >
-                <span className="flex items-center gap-2">
-                  <Utensils size={16} className="shrink-0 text-primary" aria-hidden="true" />
-                  <span className="truncate font-medium text-text">{recipe.name}</span>
-                </span>
-                <span className="mt-0.5 block text-xs text-muted">
-                  {recipe.ingredients.length} ingrediente
-                  {recipe.ingredients.length === 1 ? '' : 's'}
-                  {recipe.servings ? ` · ${recipe.servings} raciones` : ''}
-                </span>
-              </button>
-              <Button
-                size="sm"
-                onClick={() => cook(recipe)}
-                disabled={recipe.ingredients.length === 0}
-              >
-                <ChefHat size={16} aria-hidden="true" />
-                He cocinado
-              </Button>
-            </li>
-          ))}
+                <button
+                  type="button"
+                  onClick={() => openEditor(recipe)}
+                  className="min-w-0 flex-1 text-left"
+                >
+                  <span className="flex items-center gap-2">
+                    <Utensils size={16} className="shrink-0 text-primary" aria-hidden="true" />
+                    <span className="truncate font-medium text-text">{recipe.name}</span>
+                  </span>
+                  <span className="mt-0.5 block text-xs text-muted">
+                    {recipe.ingredients.length} ingrediente
+                    {recipe.ingredients.length === 1 ? '' : 's'}
+                    {recipe.servings ? ` · ${recipe.servings} raciones` : ''}
+                  </span>
+                </button>
+                <Button
+                  size="sm"
+                  onClick={() => cook(recipe)}
+                  disabled={recipe.ingredients.length === 0}
+                >
+                  <ChefHat size={16} aria-hidden="true" />
+                  He cocinado
+                </Button>
+              </AnimatedListItem>
+            ))}
+          </AnimatePresence>
         </ul>
       )}
 

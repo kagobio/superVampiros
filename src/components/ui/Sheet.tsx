@@ -1,5 +1,11 @@
 import { useEffect, useId, useRef, type ReactNode } from 'react';
-import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
+import {
+  AnimatePresence,
+  motion,
+  useDragControls,
+  useReducedMotion,
+  type PanInfo,
+} from 'framer-motion';
 import { X } from 'lucide-react';
 import { IconButton } from './IconButton';
 
@@ -15,14 +21,21 @@ interface SheetProps {
 const FOCUSABLE =
   'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])';
 
+// Umbrales para el gesto de arrastrar‑para‑cerrar (estilo hoja nativa).
+const CLOSE_DISTANCE = 120; // px arrastrados hacia abajo
+const CLOSE_VELOCITY = 500; // px/s de impulso al soltar
+
 /**
  * Panel deslizante inferior (mobile-first) para formularios y detalles.
  * Accesible: role=dialog, foco atrapado, cierre con Escape y bloqueo de scroll.
+ * Se puede arrastrar hacia abajo (desde la cabecera) para cerrar, con la curva
+ * de muelle habitual de las hojas nativas. Respeta `prefers-reduced-motion`.
  */
 export function Sheet({ open, onClose, title, children, footer }: SheetProps) {
   const panelRef = useRef<HTMLDivElement>(null);
   const titleId = useId();
   const reduce = useReducedMotion();
+  const dragControls = useDragControls();
 
   // Bloquea el scroll del fondo mientras el sheet está abierto.
   useEffect(() => {
@@ -66,6 +79,14 @@ export function Sheet({ open, onClose, title, children, footer }: SheetProps) {
     return () => document.removeEventListener('keydown', onKey);
   }, [open, onClose]);
 
+  // Al soltar: si se arrastró lo suficiente o con impulso, cierra; si no,
+  // Framer devuelve el panel a su sitio con muelle.
+  const handleDragEnd = (_e: PointerEvent, info: PanInfo) => {
+    if (info.offset.y > CLOSE_DISTANCE || info.velocity.y > CLOSE_VELOCITY) {
+      onClose();
+    }
+  };
+
   return (
     <AnimatePresence>
       {open ? (
@@ -87,13 +108,35 @@ export function Sheet({ open, onClose, title, children, footer }: SheetProps) {
             initial={{ y: reduce ? 0 : '100%' }}
             animate={{ y: 0 }}
             exit={{ y: reduce ? 0 : '100%' }}
-            transition={{ type: 'tween', duration: reduce ? 0 : 0.22, ease: [0.32, 0.72, 0, 1] }}
+            transition={
+              reduce ? { duration: 0 } : { type: 'spring', stiffness: 380, damping: 40, mass: 0.8 }
+            }
+            drag={reduce ? false : 'y'}
+            dragControls={dragControls}
+            dragListener={false}
+            dragConstraints={{ top: 0 }}
+            dragElastic={{ top: 0, bottom: 0.4 }}
+            onDragEnd={handleDragEnd}
           >
-            <div className="flex items-center justify-between gap-2 border-b border-border px-4 py-3">
-              <h2 id={titleId} className="text-lg">
-                {title}
-              </h2>
-              <IconButton icon={X} label="Cerrar" onClick={onClose} size="sm" />
+            {/* Zona de agarre: tirador + cabecera. Inicia el arrastre. */}
+            <div
+              onPointerDown={(e) => {
+                if (!reduce) dragControls.start(e);
+              }}
+              className={reduce ? '' : 'cursor-grab touch-none select-none active:cursor-grabbing'}
+            >
+              <div className="flex justify-center pt-2.5 pb-1">
+                <span aria-hidden="true" className="h-1.5 w-10 rounded-full bg-border" />
+              </div>
+              <div className="flex items-center justify-between gap-2 border-b border-border px-4 pb-3 pt-1">
+                <h2 id={titleId} className="text-lg">
+                  {title}
+                </h2>
+                {/* Evita que pulsar «Cerrar» inicie el arrastre. */}
+                <span onPointerDown={(e) => e.stopPropagation()}>
+                  <IconButton icon={X} label="Cerrar" onClick={onClose} size="sm" />
+                </span>
+              </div>
             </div>
             <div className="flex-1 overflow-y-auto px-4 py-4">{children}</div>
             {footer ? <div className="border-t border-border px-4 py-3">{footer}</div> : null}

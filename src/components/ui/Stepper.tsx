@@ -1,4 +1,5 @@
 import { Minus, Plus } from 'lucide-react';
+import { motion, useReducedMotion } from 'framer-motion';
 import { cn } from '@/lib/cn';
 
 interface StepperProps {
@@ -30,14 +31,21 @@ export function Stepper({
   const box = size === 'sm' ? 'h-8 w-8' : 'h-10 w-10';
   const iconSize = size === 'sm' ? 16 : 18;
   const atMin = value <= min;
+  const reduce = useReducedMotion();
+  const tap = reduce ? undefined : { scale: 0.85 };
+  const tapTransition = reduce
+    ? { duration: 0 }
+    : ({ type: 'spring', stiffness: 600, damping: 22, mass: 0.5 } as const);
 
   return (
     <div className="inline-flex items-center gap-1 rounded-xl bg-surface-2 p-1">
-      <button
+      <motion.button
         type="button"
         onClick={onDecrement}
         disabled={atMin}
         aria-label={`Quitar uno de ${label}`}
+        whileTap={atMin ? undefined : tap}
+        transition={tapTransition}
         className={cn(
           'inline-flex items-center justify-center rounded-lg text-text transition-colors',
           'hover:bg-border disabled:pointer-events-none disabled:opacity-30',
@@ -45,28 +53,38 @@ export function Stepper({
         )}
       >
         <Minus size={iconSize} aria-hidden="true" />
-      </button>
+      </motion.button>
 
       <span
         aria-live="polite"
         aria-label={`${label}: ${value}${unit ? ` ${unit}` : ''}`}
         className="min-w-10 text-center text-sm font-semibold tabular-nums"
       >
-        {value}
+        <motion.span
+          key={value}
+          initial={reduce ? false : { scale: 1.25, opacity: 0.6 }}
+          animate={reduce ? undefined : { scale: 1, opacity: 1 }}
+          transition={reduce ? { duration: 0 } : { type: 'spring', stiffness: 500, damping: 24 }}
+          className="inline-block"
+        >
+          {value}
+        </motion.span>
         {unit ? <span className="ml-0.5 text-xs font-normal text-muted">{unit}</span> : null}
       </span>
 
-      <button
+      <motion.button
         type="button"
         onClick={onIncrement}
         aria-label={`Añadir uno de ${label}`}
+        whileTap={tap}
+        transition={tapTransition}
         className={cn(
           'inline-flex items-center justify-center rounded-lg text-text transition-colors hover:bg-border',
           box,
         )}
       >
         <Plus size={iconSize} aria-hidden="true" />
-      </button>
+      </motion.button>
     </div>
   );
 }
