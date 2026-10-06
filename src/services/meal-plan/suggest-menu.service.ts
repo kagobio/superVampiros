@@ -30,7 +30,7 @@ export interface GeneratedMenu {
   comidas: GeneratedMenuSlot[];
 }
 
-function normalizeDish(data: unknown): GeneratedDish | null {
+export function normalizeDish(data: unknown): GeneratedDish | null {
   if (!data || typeof data !== 'object') return null;
   const d = data as Record<string, unknown>;
   if (typeof d.nombre !== 'string' || !d.nombre.trim()) return null;
