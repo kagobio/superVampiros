@@ -74,10 +74,17 @@ export function RecipesPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-baseline justify-between">
-        <h1 className="text-2xl">Recetas</h1>
-        <span className="text-sm text-muted">{recipes.length}</span>
-      </div>
+      <header className="flex items-end justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="text-[1.75rem]">Recetas</h1>
+          <p className="text-sm text-muted">Tus recetas y qué cocinar con lo que tienes.</p>
+        </div>
+        {recipes.length > 0 ? (
+          <span className="shrink-0 rounded-full bg-surface-2 px-2.5 py-0.5 text-xs font-medium tabular-nums text-muted">
+            {recipes.length}
+          </span>
+        ) : null}
+      </header>
 
       {products.length > 0 ? (
         <Button variant="secondary" className="w-full" onClick={openChat}>
@@ -109,16 +116,18 @@ export function RecipesPage() {
                 <button
                   type="button"
                   onClick={() => openEditor(recipe)}
-                  className="min-w-0 flex-1 text-left"
+                  className="flex min-w-0 flex-1 items-center gap-3 text-left"
                 >
-                  <span className="flex items-center gap-2">
-                    <Utensils size={16} className="shrink-0 text-primary" aria-hidden="true" />
-                    <span className="truncate font-medium text-text">{recipe.name}</span>
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                    <Utensils size={18} aria-hidden="true" />
                   </span>
-                  <span className="mt-0.5 block text-xs text-muted">
-                    {recipe.ingredients.length} ingrediente
-                    {recipe.ingredients.length === 1 ? '' : 's'}
-                    {recipe.servings ? ` · ${recipe.servings} raciones` : ''}
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate font-semibold text-text">{recipe.name}</span>
+                    <span className="mt-0.5 block text-xs text-muted">
+                      {recipe.ingredients.length} ingrediente
+                      {recipe.ingredients.length === 1 ? '' : 's'}
+                      {recipe.servings ? ` · ${recipe.servings} raciones` : ''}
+                    </span>
                   </span>
                 </button>
                 <Button

@@ -171,47 +171,57 @@ export function InventoryPage() {
   // Al escanear: si ya existe el código → +1; si es nuevo → busca el nombre y lo
   // crea; si no se encuentra → abre el formulario para nombrarlo. Un guard evita
   // procesar el mismo código dos veces a la vez (crearía duplicados por la red).
-  const handleDetected = useCallback(async (barcode: string) => {
-    const cooled = scanCooldown.current.get(barcode);
-    if (scanBusy.current.has(barcode) || (cooled && Date.now() - cooled < 3000)) return;
-    scanBusy.current.add(barcode);
-    try {
-      const existing = await inventoryService.getByBarcode(barcode);
-      if (existing) {
-        const next = await inventoryService.adjustQuantity(existing.id, 1);
-        toast(
-          `Ya lo tienes · ${existing.name} (${next?.quantity ?? existing.quantity + 1})`,
-          'success',
-        );
-        return;
+  const handleDetected = useCallback(
+    async (barcode: string) => {
+      const cooled = scanCooldown.current.get(barcode);
+      if (scanBusy.current.has(barcode) || (cooled && Date.now() - cooled < 3000)) return;
+      scanBusy.current.add(barcode);
+      try {
+        const existing = await inventoryService.getByBarcode(barcode);
+        if (existing) {
+          const next = await inventoryService.adjustQuantity(existing.id, 1);
+          toast(
+            `Ya lo tienes · ${existing.name} (${next?.quantity ?? existing.quantity + 1})`,
+            'success',
+          );
+          return;
+        }
+        const info = await lookupBarcode(barcode);
+        if (info?.name) {
+          const created = await inventoryService.create({ name: info.name, quantity: 1, barcode });
+          toast(`Añadido · ${info.name}`, 'success');
+          // La IA le asigna una categoría en segundo plano (no bloquea el escaneo).
+          void autoAssignCategory(created, categories);
+          return;
+        }
+        setScannerOpen(false);
+        setEditing(null);
+        setScanBarcode(barcode);
+        setSheetOpen(true);
+      } finally {
+        scanBusy.current.delete(barcode);
+        scanCooldown.current.set(barcode, Date.now());
       }
-      const info = await lookupBarcode(barcode);
-      if (info?.name) {
-        const created = await inventoryService.create({ name: info.name, quantity: 1, barcode });
-        toast(`Añadido · ${info.name}`, 'success');
-        // La IA le asigna una categoría en segundo plano (no bloquea el escaneo).
-        void autoAssignCategory(created, categories);
-        return;
-      }
-      setScannerOpen(false);
-      setEditing(null);
-      setScanBarcode(barcode);
-      setSheetOpen(true);
-    } finally {
-      scanBusy.current.delete(barcode);
-      scanCooldown.current.set(barcode, Date.now());
-    }
-  }, [categories]);
+    },
+    [categories],
+  );
 
   const hasProducts = products.length > 0;
   const filtersActive = hasActiveFilters(filters) || debouncedSearch.trim() !== '';
 
   return (
     <div className="space-y-4">
-      <div className="flex items-baseline justify-between">
-        <h1 className="text-2xl">Inventario</h1>
-        <span className="text-sm text-muted">{filtered.length}</span>
-      </div>
+      <header className="flex items-end justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="text-[1.75rem]">Inventario</h1>
+          <p className="text-sm text-muted">Lo que tienes en casa, siempre al día.</p>
+        </div>
+        {hasProducts ? (
+          <span className="shrink-0 rounded-full bg-surface-2 px-2.5 py-0.5 text-xs font-medium tabular-nums text-muted">
+            {filtered.length}
+          </span>
+        ) : null}
+      </header>
 
       {hasProducts ? (
         <div className="space-y-3">
@@ -229,7 +239,11 @@ export function InventoryPage() {
               className="flex w-full items-center gap-2 rounded-xl border border-primary/40 bg-primary/5 px-3 py-2.5 text-sm text-text transition-colors hover:bg-primary/10 disabled:opacity-70"
             >
               {organizing ? (
-                <Loader2 size={16} aria-hidden="true" className="shrink-0 animate-spin text-primary" />
+                <Loader2
+                  size={16}
+                  aria-hidden="true"
+                  className="shrink-0 animate-spin text-primary"
+                />
               ) : (
                 <Sparkles size={16} aria-hidden="true" className="shrink-0 text-primary" />
               )}

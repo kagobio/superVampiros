@@ -78,10 +78,17 @@ export function ShoppingListPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-baseline justify-between">
-        <h1 className="text-2xl">Lista de la compra</h1>
-        <span className="text-sm text-muted">{autoCount + pendingManual.length}</span>
-      </div>
+      <header className="flex items-end justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="text-[1.75rem]">Lista de la compra</h1>
+          <p className="text-sm text-muted">Lo que falta, junto y listo para comprar.</p>
+        </div>
+        {autoCount + pendingManual.length > 0 ? (
+          <span className="shrink-0 rounded-full bg-surface-2 px-2.5 py-0.5 text-xs font-medium tabular-nums text-muted">
+            {autoCount + pendingManual.length}
+          </span>
+        ) : null}
+      </header>
 
       <div className="flex items-center gap-2">
         <Input
