@@ -1,5 +1,6 @@
 import { memo } from 'react';
 import { Check, Star } from 'lucide-react';
+import { motion, useReducedMotion } from 'framer-motion';
 import type { Product } from '@/domain/product/product.types';
 import { expiryStatus, stockStatus } from '@/domain/product/product.rules';
 import { Stepper } from '@/components/ui/Stepper';
@@ -39,9 +40,17 @@ function ProductCardBase({
 }: ProductCardProps) {
   const stock = stockStatus(product);
   const expiry = expiryStatus(product, now, expirySoonDays);
+  const reduce = useReducedMotion();
 
   return (
-    <div
+    <motion.div
+      layout={reduce ? false : 'position'}
+      initial={reduce ? false : { opacity: 0, scale: 0.97 }}
+      animate={reduce ? undefined : { opacity: 1, scale: 1 }}
+      exit={reduce ? undefined : { opacity: 0, scale: 0.97 }}
+      transition={
+        reduce ? { duration: 0 } : { type: 'spring', stiffness: 500, damping: 40, mass: 0.6 }
+      }
       className={cn(
         'flex items-center gap-2.5 rounded-2xl border bg-surface p-3.5 transition-colors',
         selectionMode && selected ? 'border-primary bg-primary/5' : 'border-border',
@@ -102,7 +111,7 @@ function ProductCardBase({
           onIncrement={() => onAdjust(product.id, 1)}
         />
       )}
-    </div>
+    </motion.div>
   );
 }
 

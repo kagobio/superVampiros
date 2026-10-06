@@ -1,4 +1,5 @@
 import { ChevronDown } from 'lucide-react';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import type { Product } from '@/domain/product/product.types';
 import type { ProductGroup } from '@/domain/inventory/inventory-view';
 import { useCollapsedCategories } from '@/stores/collapsed-categories.store';
@@ -37,6 +38,7 @@ export function GroupedProductList({
 }: GroupedProductListProps) {
   const collapsed = useCollapsedCategories((s) => s.collapsed);
   const toggle = useCollapsedCategories((s) => s.toggle);
+  const reduce = useReducedMotion();
 
   return (
     <div className="space-y-5">
@@ -69,25 +71,40 @@ export function GroupedProductList({
               <span className="text-xs text-muted">{group.products.length}</span>
             </button>
 
-            {!isCollapsed ? (
-              <div className="mt-2 space-y-2.5">
-                {group.products.map((product) => (
-                  <ProductCard
-                    key={product.id}
-                    product={product}
-                    unitAbbrev={product.unitId ? unitById.get(product.unitId) : undefined}
-                    subtitle={subtitleFor(product)}
-                    now={now}
-                    expirySoonDays={expirySoonDays}
-                    onAdjust={onAdjust}
-                    onOpen={onOpen}
-                    selectionMode={selectionMode}
-                    selected={selectedIds?.has(product.id) ?? false}
-                    onToggleSelect={onToggleSelect}
-                  />
-                ))}
-              </div>
-            ) : null}
+            <AnimatePresence initial={false}>
+              {!isCollapsed ? (
+                <motion.div
+                  key="content"
+                  initial={reduce ? false : { height: 0, opacity: 0 }}
+                  animate={reduce ? undefined : { height: 'auto', opacity: 1 }}
+                  exit={reduce ? undefined : { height: 0, opacity: 0 }}
+                  transition={
+                    reduce ? { duration: 0 } : { duration: 0.22, ease: [0.32, 0.72, 0, 1] }
+                  }
+                  className="overflow-hidden"
+                >
+                  <div className="mt-2 space-y-2.5">
+                    <AnimatePresence initial={false}>
+                      {group.products.map((product) => (
+                        <ProductCard
+                          key={product.id}
+                          product={product}
+                          unitAbbrev={product.unitId ? unitById.get(product.unitId) : undefined}
+                          subtitle={subtitleFor(product)}
+                          now={now}
+                          expirySoonDays={expirySoonDays}
+                          onAdjust={onAdjust}
+                          onOpen={onOpen}
+                          selectionMode={selectionMode}
+                          selected={selectedIds?.has(product.id) ?? false}
+                          onToggleSelect={onToggleSelect}
+                        />
+                      ))}
+                    </AnimatePresence>
+                  </div>
+                </motion.div>
+              ) : null}
+            </AnimatePresence>
           </section>
         );
       })}

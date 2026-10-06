@@ -1,6 +1,7 @@
 import { NavLink } from 'react-router-dom';
 import { Home, Boxes, ShoppingCart, ChefHat, Menu } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
+import { motion, useReducedMotion } from 'framer-motion';
 import { cn } from '@/lib/cn';
 
 interface NavItem {
@@ -20,6 +21,8 @@ const items: NavItem[] = [
 
 /** Navegación principal (mobile-first). En escritorio se puede migrar a sidebar. */
 export function BottomNav() {
+  const reduce = useReducedMotion();
+
   return (
     <nav
       aria-label="Navegación principal"
@@ -33,13 +36,26 @@ export function BottomNav() {
               end={end}
               className={({ isActive }) =>
                 cn(
-                  'flex min-h-14 flex-col items-center justify-center gap-1 py-2 text-xs transition-colors',
+                  'relative flex min-h-14 flex-col items-center justify-center gap-1 py-2 text-xs transition-colors',
                   isActive ? 'text-primary' : 'text-muted hover:text-text',
                 )
               }
             >
               {({ isActive }) => (
                 <>
+                  {/* Pastilla compartida que se desliza entre pestañas al navegar. */}
+                  {isActive ? (
+                    <motion.span
+                      layoutId="nav-active-pill"
+                      aria-hidden="true"
+                      className="absolute inset-x-2 inset-y-1 -z-10 rounded-xl bg-primary/10"
+                      transition={
+                        reduce
+                          ? { duration: 0 }
+                          : { type: 'spring', stiffness: 500, damping: 38, mass: 0.7 }
+                      }
+                    />
+                  ) : null}
                   <Icon size={22} strokeWidth={isActive ? 2.4 : 1.8} aria-hidden="true" />
                   <span>{label}</span>
                 </>
