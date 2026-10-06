@@ -9,6 +9,7 @@ import {
   ShoppingCart,
   Sparkles,
   Star,
+  ChevronRight,
 } from 'lucide-react';
 import type { Product } from '@/domain/product/product.types';
 import { computeStats } from '@/domain/inventory/inventory-stats';
@@ -45,8 +46,11 @@ export function DashboardPage() {
 
   if (products.length === 0) {
     return (
-      <div className="space-y-4">
-        <h1 className="text-2xl">Inicio</h1>
+      <div className="space-y-5">
+        <header className="space-y-1">
+          <h1 className="text-[1.75rem]">Inicio</h1>
+          <p className="text-sm text-muted">Tu despensa, de un vistazo.</p>
+        </header>
         <EmptyState
           icon={PackageOpen}
           title="Tu despensa está vacía"
@@ -58,10 +62,15 @@ export function DashboardPage() {
   }
 
   return (
-    <div className="space-y-5">
-      <h1 className="text-2xl">Inicio</h1>
+    <div className="space-y-6">
+      <header className="space-y-1">
+        <h1 className="text-[1.75rem]">Inicio</h1>
+        <p className="text-sm text-muted">
+          {stats.total} {stats.total === 1 ? 'producto' : 'productos'} en tu despensa.
+        </p>
+      </header>
 
-      <section aria-label="Resumen" className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+      <section aria-label="Resumen" className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
         <Stat
           label="Productos"
           value={stats.total}
@@ -111,16 +120,26 @@ export function DashboardPage() {
             <Sparkles size={16} aria-hidden="true" />
             <h2 className="text-sm font-medium text-text">Añadidos recientemente</h2>
           </div>
-          <ul className="space-y-2">
+          <ul className="space-y-1.5">
             {recent.map((p: Product) => (
               <li key={p.id}>
                 <button
                   type="button"
                   onClick={() => navigate('/inventario')}
-                  className="flex w-full items-center gap-3 rounded-2xl border border-border bg-surface p-2.5 text-left transition-colors hover:bg-surface-2"
+                  className="group flex w-full items-center gap-3 rounded-xl border border-border bg-surface p-2.5 pr-2 text-left transition-[transform,background-color,border-color] hover:border-primary/30 hover:bg-surface-2 active:scale-[0.99] motion-reduce:active:scale-100"
                 >
+                  <span
+                    aria-hidden="true"
+                    className="h-2.5 w-2.5 shrink-0 rounded-full ring-1 ring-inset ring-black/10"
+                    style={{ backgroundColor: p.color || 'var(--primary)' }}
+                  />
                   <span className="min-w-0 flex-1 truncate font-medium text-text">{p.name}</span>
                   <span className="text-sm tabular-nums text-muted">{p.quantity}</span>
+                  <ChevronRight
+                    size={16}
+                    aria-hidden="true"
+                    className="shrink-0 text-muted/60 transition-transform group-hover:translate-x-0.5"
+                  />
                 </button>
               </li>
             ))}

@@ -37,7 +37,8 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(functio
       aria-label={label}
       title={label}
       className={cn(
-        'inline-flex items-center justify-center rounded-xl transition-colors',
+        'inline-flex items-center justify-center rounded-xl transition-[transform,background-color,color]',
+        'active:scale-95 motion-reduce:active:scale-100',
         'disabled:pointer-events-none disabled:opacity-40',
         variants[variant],
         s.box,

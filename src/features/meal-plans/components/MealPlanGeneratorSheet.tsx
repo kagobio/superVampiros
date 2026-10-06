@@ -53,7 +53,9 @@ export function MealPlanGeneratorSheet({
     try {
       const menu = await generateMenu(items, preferences);
       if (menu.comidas.length === 0) {
-        setError('La IA no propuso ningún plato. Prueba a describir tus preferencias de otra forma.');
+        setError(
+          'La IA no propuso ningún plato. Prueba a describir tus preferencias de otra forma.',
+        );
         return;
       }
       await onGenerated(menu);
@@ -82,12 +84,12 @@ export function MealPlanGeneratorSheet({
     >
       <div className="space-y-4">
         <div className="text-center">
-          <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-            <Sparkles size={22} aria-hidden="true" />
+          <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary ring-1 ring-inset ring-primary/15">
+            <Sparkles size={24} aria-hidden="true" />
           </span>
           <p className="mt-3 text-sm text-muted">
-            Dime cómo quieres comer esta semana y te preparo el menú completo (comida y cena de
-            cada día) aprovechando lo que tienes en casa.
+            Dime cómo quieres comer esta semana y te preparo el menú completo (comida y cena de cada
+            día) aprovechando lo que tienes en casa.
           </p>
         </div>
 

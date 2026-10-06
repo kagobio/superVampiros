@@ -25,7 +25,12 @@ type Turn =
   | { role: 'user'; text: string }
   | { role: 'assistant'; reply: MenuEditReply; applied: AppliedChange[] };
 
-const QUICK = ['Hazme el menú de la semana', 'Algo vegetariano', 'Cenas más ligeras', 'Usa lo que caduca'];
+const QUICK = [
+  'Hazme el menú de la semana',
+  'Algo vegetariano',
+  'Cenas más ligeras',
+  'Usa lo que caduca',
+];
 
 function toMessages(turns: Turn[]): ChatMessage[] {
   return turns.map((t) =>
@@ -80,11 +85,13 @@ export function MealPlanAiChat({
 
   return (
     <div className="rounded-2xl border border-border bg-surface-2 p-3">
-      <p className="flex items-center gap-1.5 text-sm font-medium text-text">
-        <Sparkles size={15} className="text-primary" aria-hidden="true" />
+      <p className="flex items-center gap-2 text-sm font-semibold text-text">
+        <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-primary/10 text-primary">
+          <Sparkles size={14} aria-hidden="true" />
+        </span>
         Editar con IA
       </p>
-      <p className="mt-0.5 text-xs text-muted">
+      <p className="mt-1 text-xs text-muted">
         Pídele que añada, cambie o quite platos (p. ej. “cambia la cena del martes por algo
         ligero”).
       </p>
@@ -109,10 +116,7 @@ export function MealPlanAiChat({
                 {turn.applied.length > 0 ? (
                   <ul className="space-y-1">
                     {turn.reply.cambios.map((c, j) => (
-                      <li
-                        key={j}
-                        className="flex items-center gap-1.5 text-xs text-muted"
-                      >
+                      <li key={j} className="flex items-center gap-1.5 text-xs text-muted">
                         <Check size={12} className="shrink-0 text-success" aria-hidden="true" />
                         {WEEK_DAYS[c.dia]} · {momentoLabel(c.momento)}:{' '}
                         {c.accion === 'clear' ? (
@@ -160,7 +164,7 @@ export function MealPlanAiChat({
           onChange={(e) => setInput(e.target.value)}
           placeholder="Pídele un cambio…"
           aria-label="Mensaje para editar el menú con IA"
-          className="min-w-0 flex-1 rounded-xl border border-border bg-bg px-3 py-2 text-sm text-text outline-none placeholder:text-muted focus-visible:ring-2 focus-visible:ring-[color:var(--ring)]"
+          className="min-w-0 flex-1 rounded-xl border border-border bg-surface px-3 py-2 text-sm text-text outline-none transition-[border-color] placeholder:text-muted focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-[color:var(--ring)]"
         />
         <button
           type="submit"
