@@ -62,6 +62,20 @@ export async function parseReceipt(imageDataUrl: string): Promise<ReceiptItem[]>
   return parseReceiptResponse(await res.text());
 }
 
+/** Envía el TEXTO de una factura (extraído de un PDF) y devuelve los productos. */
+export async function parseReceiptText(text: string): Promise<ReceiptItem[]> {
+  const res = await fetch('/.netlify/functions/parse-receipt-text', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ text }),
+  });
+  if (!res.ok) {
+    const body = (await res.json().catch(() => null)) as { error?: string } | null;
+    throw new Error(body?.error ?? 'No se pudo leer la factura.');
+  }
+  return parseReceiptResponse(await res.text());
+}
+
 /** Busca un producto existente por nombre (normalizado, con inclusión parcial). */
 export function findProductByName(name: string, products: Product[]): Product | undefined {
   const n = normalizeText(name);

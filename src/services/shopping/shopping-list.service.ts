@@ -54,6 +54,29 @@ export class ShoppingListService {
     return item;
   }
 
+  /**
+   * Añade varios elementos manuales de una vez (p. ej. lo que falta para un menú
+   * semanal). Evita duplicados: si ya existe un elemento manual sin marcar para
+   * el mismo producto, actualiza su cantidad en vez de crear otro. Devuelve
+   * cuántos elementos nuevos se han creado.
+   */
+  async addMissingFromMenu(inputs: NewManualItemInput[]): Promise<number> {
+    const existing = await this.repo.listManual();
+    let created = 0;
+    for (const input of inputs) {
+      const duplicate = input.productId
+        ? existing.find((i) => !i.checked && i.productId === input.productId)
+        : undefined;
+      if (duplicate) {
+        await this.repo.update(duplicate.id, { quantity: input.quantity ?? duplicate.quantity });
+      } else {
+        await this.addManual(input);
+        created++;
+      }
+    }
+    return created;
+  }
+
   /** Marca/desmarca un elemento manual como comprado. */
   async toggleChecked(id: string): Promise<ShoppingListItem | undefined> {
     const item = await this.repo.getById(id);

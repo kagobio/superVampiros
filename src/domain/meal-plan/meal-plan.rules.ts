@@ -81,3 +81,39 @@ export function aggregatePlanIngredients(
   }
   return [...totals.values()];
 }
+
+/** Ingrediente del menú que no cubre el stock actual (lo que falta comprar). */
+export interface MissingIngredient {
+  productId: Id;
+  needed: number;
+  available: number;
+  missing: number;
+  unitId: Id | null;
+}
+
+/**
+ * A partir de los ingredientes agregados del menú y del stock actual (mapa
+ * `productId → cantidad`), calcula lo que falta: `missing = needed − available`
+ * acotado a 0. Devuelve solo los productos con faltante (> 0). Si un producto
+ * aparece con varias unidades, se compara cada unidad por separado.
+ */
+export function computeMissingIngredients(
+  aggregated: AggregatedIngredient[],
+  quantityByProduct: Map<Id, number>,
+): MissingIngredient[] {
+  const missing: MissingIngredient[] = [];
+  for (const ing of aggregated) {
+    const available = quantityByProduct.get(ing.productId) ?? 0;
+    const shortfall = ing.quantity - available;
+    if (shortfall > 0) {
+      missing.push({
+        productId: ing.productId,
+        needed: ing.quantity,
+        available,
+        missing: shortfall,
+        unitId: ing.unitId,
+      });
+    }
+  }
+  return missing;
+}

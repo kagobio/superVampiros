@@ -138,12 +138,14 @@ fase nueva sin cerrar (terminar + probar + revisar) la anterior. Leyenda:
 - [x] Filtros reducidos a: Para comprar · Agotados · Caduca pronto · Favoritos.
 - [x] Categorías por defecto reducidas (el producto recuerda la suya).
 - [ ] Compartir inventario con otros hogares.
-- [ ] OCR de tickets de compra.
-- [ ] Integración con supermercados.
+- [x] **Lectura de tickets/facturas de compra con IA.** Foto del ticket (modelo de visión) o **factura en PDF** (se extrae el texto con pdf.js → modelo de texto; respaldo a imagen si el PDF es escaneado). Revisión/corrección y alta como compras con precio (cuentan para el gasto).
+- [~] Integración con supermercados. Investigado Mercadona: no hay API oficial; las no oficiales (p. ej. `mercaapi`) solo exponen **catálogo y precios**, no el historial de compras de la cuenta. La compra mensual se obtiene de los **tickets** (escáner con IA). Posible mejora futura: usar un catálogo de Mercadona para rellenar precios.
 - [ ] IA: sugerencia de recetas según inventario.
 - [ ] IA: generación automática de la lista de la compra.
-- [ ] Control del gasto mensual.
-- [x] **Menú semanal** (planificador de comidas): varios menús guardados, cada uno con comida y cena por día (Lun–Dom). De las recetas asignadas se derivan, sumados, todos los ingredientes necesarios (con opción de copiar la lista). Nueva entidad `MealPlan` (Dexie v4) + servicio + sync + import/export. Enlace desde Recetas.
+- [x] **Control del gasto mensual.** Sección "Gasto" en Estadísticas (total del mes, 6 meses en barras, top por gasto) + pantalla **"Compras por mes"**: eliges un mes y ves todos los productos comprados (unidades e importe) y el gasto total. Se nutre de los eventos de compra (marcar comprado, packs, tickets).
+- [x] **Menú semanal** (planificador de comidas): varios menús guardados, cada uno con comida y cena por día (Lun–Dom). De las recetas asignadas se derivan, sumados, todos los ingredientes necesarios (con opción de copiar la lista y de **añadir a la compra solo lo que falta** según el stock). Nueva entidad `MealPlan` (Dexie v4) + servicio + sync + import/export. Enlace desde Recetas.
+- [x] **IA: generar el menú semanal** según preferencias (texto libre + chips). La IA (Groq, función `suggest-menu`) propone comida y cena de cada día priorizando el inventario; se crean las recetas automáticamente y se abre el menú para revisarlo. Se mantiene también el modo manual.
+- [x] **Menú como tabla editable + chat de IA.** El editor muestra el menú como tabla (días × Comida/Cena) editable; un chat de IA integrado (función `edit-menu`) añade, cambia o quita platos según se le pide ("cambia la cena del martes", "usa estos ingredientes"), creando las recetas nuevas y reutilizando las existentes.
 - [ ] Planificador semanal: calendario de caducidades.
 - [ ] Notificaciones inteligentes.
 - [ ] Widgets móvil, Apple Shortcuts / Android Quick Settings.

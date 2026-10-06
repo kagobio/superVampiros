@@ -8,6 +8,7 @@ import {
   Settings,
   ShoppingBasket,
   Tags,
+  Wallet,
   type LucideIcon,
 } from 'lucide-react';
 import { useFiltersStore } from '@/stores/filters.store';
@@ -49,6 +50,13 @@ export function MorePage() {
       icon: Package2,
       label: 'Estadísticas',
       description: 'Consumo, compras y estado del inventario.',
+      ready: true,
+    },
+    {
+      to: '/compras-mes',
+      icon: Wallet,
+      label: 'Compras por mes',
+      description: 'La compra de cada mes: productos y gasto.',
       ready: true,
     },
     {

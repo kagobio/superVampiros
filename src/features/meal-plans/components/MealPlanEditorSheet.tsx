@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
-import { Copy, Trash2, UtensilsCrossed } from 'lucide-react';
-import type { MealPlan } from '@/domain/meal-plan/meal-plan.types';
+import { Copy, ShoppingCart, Trash2, UtensilsCrossed } from 'lucide-react';
+import type { MealPlan, MealSlot } from '@/domain/meal-plan/meal-plan.types';
 import {
   MEAL_SLOTS,
   WEEK_DAYS,
@@ -10,6 +10,8 @@ import {
   slotKey,
 } from '@/domain/meal-plan/meal-plan.rules';
 import { mealPlanService } from '@/services/meal-plan/meal-plan.service';
+import { shoppingListService } from '@/services/shopping/shopping-list.service';
+import type { MenuSlotContext } from '@/services/meal-plan/edit-menu.service';
 import { toast } from '@/stores/toast.store';
 import { Sheet } from '@/components/ui/Sheet';
 import { Button } from '@/components/ui/Button';
@@ -19,6 +21,8 @@ import { Select } from '@/components/ui/Select';
 import { useUnits } from '@/hooks/useTaxonomies';
 import { useProducts } from '@/features/inventory/hooks/useProducts';
 import { useRecipes } from '@/features/recipes/hooks/useRecipes';
+import { MealPlanAiChat } from './MealPlanAiChat';
+import type { AppliedChange } from '../apply-menu-changes';
 
 interface MealPlanEditorSheetProps {
   open: boolean;
@@ -35,17 +39,15 @@ export function MealPlanEditorSheet({ open, onClose, plan }: MealPlanEditorSheet
   const productById = useMemo(() => new Map(products.map((p) => [p.id, p])), [products]);
   const unitById = useMemo(() => new Map(units.map((u) => [u.id, u.abbreviation])), [units]);
 
-  // El padre remonta este componente (vía `key`) en cada apertura, así que
-  // basta con inicializar el estado desde el menú, sin efectos de sincronización.
+  // El padre remonta este componente (vía `key`) en cada apertura.
   const [name, setName] = useState(plan?.name ?? '');
-  // Asignaciones por hueco: `slotKey → recipeId`.
   const [assignments, setAssignments] = useState<Record<string, string>>(() =>
     Object.fromEntries(entriesToMap(plan?.entries ?? [])),
   );
 
   const isEdit = plan !== null;
 
-  const setSlot = (day: number, slot: (typeof MEAL_SLOTS)[number]['slot'], recipeId: string) => {
+  const setSlot = (day: number, slot: MealSlot, recipeId: string) => {
     setAssignments((prev) => {
       const next = { ...prev };
       if (recipeId) next[slotKey(day, slot)] = recipeId;
@@ -54,8 +56,37 @@ export function MealPlanEditorSheet({ open, onClose, plan }: MealPlanEditorSheet
     });
   };
 
-  // Ingredientes derivados en vivo de las recetas asignadas al menú.
-  const ingredients = useMemo(() => {
+  // Contexto del menú actual para la IA (huecos ocupados, con nombre de receta).
+  const getAiContext = (): MenuSlotContext[] => {
+    const ctx: MenuSlotContext[] = [];
+    for (const [key, recipeId] of Object.entries(assignments)) {
+      const [dayStr, slot] = key.split(':');
+      const recipe = recipesById.get(recipeId);
+      if (!recipe) continue;
+      ctx.push({
+        dia: Number(dayStr),
+        momento: slot === 'dinner' ? 'cena' : 'comida',
+        nombre: recipe.name,
+      });
+    }
+    return ctx;
+  };
+
+  // Aplica a la tabla los cambios resueltos por el chat de IA.
+  const applyAiChanges = (changes: AppliedChange[]) => {
+    setAssignments((prev) => {
+      const next = { ...prev };
+      for (const c of changes) {
+        const key = slotKey(c.day, c.slot);
+        if (c.recipeId) next[key] = c.recipeId;
+        else delete next[key];
+      }
+      return next;
+    });
+  };
+
+  // Ingredientes derivados en vivo, con stock actual y lo que falta comprar.
+  const rows = useMemo(() => {
     const entries = mapToEntries(new Map(Object.entries(assignments)));
     const draft: MealPlan = {
       id: plan?.id ?? 'draft',
@@ -67,16 +98,27 @@ export function MealPlanEditorSheet({ open, onClose, plan }: MealPlanEditorSheet
       name,
       entries,
     };
-    return aggregatePlanIngredients(draft, recipesById)
-      .map((i) => ({
-        name: productById.get(i.productId)?.name ?? 'Producto eliminado',
-        quantity: i.quantity,
-        unit: i.unitId ? (unitById.get(i.unitId) ?? '') : '',
-      }))
+    const aggregated = aggregatePlanIngredients(draft, recipesById);
+    return aggregated
+      .map((i) => {
+        const product = productById.get(i.productId);
+        const available = product?.quantity ?? 0;
+        return {
+          productId: i.productId,
+          name: product?.name ?? 'Producto eliminado',
+          needed: i.quantity,
+          available,
+          missing: Math.max(i.quantity - available, 0),
+          unitId: i.unitId,
+          unit: i.unitId ? (unitById.get(i.unitId) ?? '') : '',
+          categoryId: product?.categoryId ?? null,
+          exists: Boolean(product),
+        };
+      })
       .sort((a, b) => a.name.localeCompare(b.name, 'es', { sensitivity: 'base' }));
   }, [assignments, name, plan?.id, recipesById, productById, unitById]);
 
-  const plannedCount = Object.keys(assignments).length;
+  const missingRows = rows.filter((r) => r.exists && r.missing > 0);
 
   const handleSave = async () => {
     if (!name.trim()) return;
@@ -94,8 +136,8 @@ export function MealPlanEditorSheet({ open, onClose, plan }: MealPlanEditorSheet
   };
 
   const copyIngredients = async () => {
-    const text = ingredients
-      .map((i) => `- ${i.name}${i.quantity ? ` ×${i.quantity}${i.unit ? ` ${i.unit}` : ''}` : ''}`)
+    const text = rows
+      .map((i) => `- ${i.name}${i.needed ? ` ×${i.needed}${i.unit ? ` ${i.unit}` : ''}` : ''}`)
       .join('\n');
     try {
       await navigator.clipboard.writeText(text);
@@ -104,6 +146,26 @@ export function MealPlanEditorSheet({ open, onClose, plan }: MealPlanEditorSheet
       toast('No se pudo copiar', 'warning');
     }
   };
+
+  const addMissingToShoppingList = async () => {
+    const created = await shoppingListService.addMissingFromMenu(
+      missingRows.map((r) => ({
+        name: r.name,
+        quantity: r.missing,
+        unitId: r.unitId,
+        categoryId: r.categoryId,
+        productId: r.productId,
+      })),
+    );
+    toast(
+      created > 0
+        ? `${created} producto${created === 1 ? '' : 's'} añadido${created === 1 ? '' : 's'} a la compra`
+        : 'La lista ya tenía lo que falta',
+      'success',
+    );
+  };
+
+  const stockItems = products.filter((p) => p.quantity > 0).map((p) => p.name);
 
   return (
     <Sheet
@@ -137,50 +199,47 @@ export function MealPlanEditorSheet({ open, onClose, plan }: MealPlanEditorSheet
           )}
         </Field>
 
-        {recipes.length === 0 ? (
-          <p className="rounded-xl border border-border bg-surface-2 p-3 text-sm text-muted">
-            Primero crea recetas para poder planificar el menú.
-          </p>
-        ) : (
-          <div className="space-y-3">
-            <p className="text-sm font-medium text-text">Menú de la semana</p>
-            {WEEK_DAYS.map((dayLabel, day) => (
-              <div key={dayLabel} className="rounded-xl border border-border bg-surface-2 p-3">
-                <p className="mb-2 text-sm font-medium text-text">{dayLabel}</p>
-                <div className="space-y-2">
-                  {MEAL_SLOTS.map(({ slot, label }) => (
-                    <div key={slot} className="flex items-center gap-2">
-                      <span className="w-16 shrink-0 text-xs uppercase tracking-wide text-muted">
-                        {label}
-                      </span>
-                      <Select
-                        aria-label={`${label} del ${dayLabel}`}
-                        value={assignments[slotKey(day, slot)] ?? ''}
-                        onChange={(e) => setSlot(day, slot, e.target.value)}
-                      >
-                        <option value="">—</option>
-                        {recipes.map((r) => (
-                          <option key={r.id} value={r.id}>
-                            {r.name}
-                          </option>
-                        ))}
-                      </Select>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+        <MealPlanAiChat
+          items={stockItems}
+          recipes={recipes}
+          products={products}
+          getContext={getAiContext}
+          onApply={applyAiChanges}
+        />
+
+        <div>
+          <p className="mb-1.5 text-sm font-medium text-text">Menú de la semana</p>
+          {recipes.length === 0 ? (
+            <p className="rounded-xl border border-border bg-surface-2 p-3 text-sm text-muted">
+              Aún no hay recetas. Pídele a la IA que te haga el menú, o crea recetas primero.
+            </p>
+          ) : (
+            <div className="grid grid-cols-[2.4rem_1fr_1fr] items-center gap-1.5">
+              <span />
+              <span className="text-center text-xs uppercase tracking-wide text-muted">Comida</span>
+              <span className="text-center text-xs uppercase tracking-wide text-muted">Cena</span>
+              {WEEK_DAYS.map((dayLabel, day) => (
+                <DayRow
+                  key={dayLabel}
+                  dayLabel={dayLabel}
+                  day={day}
+                  assignments={assignments}
+                  recipes={recipes}
+                  onChange={setSlot}
+                />
+              ))}
+            </div>
+          )}
+        </div>
 
         <div>
           <div className="mb-1.5 flex items-center justify-between gap-2">
             <p className="flex items-center gap-1.5 text-sm font-medium text-text">
               <UtensilsCrossed size={15} className="text-primary" aria-hidden="true" />
               Ingredientes necesarios
-              <span className="text-muted">· {ingredients.length}</span>
+              <span className="text-muted">· {rows.length}</span>
             </p>
-            {ingredients.length > 0 ? (
+            {rows.length > 0 ? (
               <button
                 type="button"
                 onClick={copyIngredients}
@@ -191,37 +250,87 @@ export function MealPlanEditorSheet({ open, onClose, plan }: MealPlanEditorSheet
               </button>
             ) : null}
           </div>
-          {ingredients.length === 0 ? (
+          {rows.length === 0 ? (
             <p className="text-xs text-muted">
               Asigna recetas a los días y aquí aparecerán, sumados, todos los ingredientes.
             </p>
           ) : (
-            <ul className="space-y-1.5">
-              {ingredients.map((i) => (
-                <li
-                  key={`${i.name}-${i.unit}`}
-                  className="flex items-center justify-between gap-3 rounded-xl border border-border bg-surface p-2.5 text-sm"
-                >
-                  <span className="min-w-0 flex-1 truncate text-text">{i.name}</span>
-                  {i.quantity ? (
-                    <span className="shrink-0 text-muted">
-                      ×{i.quantity}
-                      {i.unit ? ` ${i.unit}` : ''}
+            <>
+              <ul className="space-y-1.5">
+                {rows.map((i) => (
+                  <li
+                    key={`${i.productId}-${i.unit}`}
+                    className="flex items-center justify-between gap-3 rounded-xl border border-border bg-surface p-2.5 text-sm"
+                  >
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-text">{i.name}</span>
+                      {i.exists ? (
+                        <span className="text-xs text-muted">
+                          tienes {i.available}
+                          {i.missing > 0 ? (
+                            <span className="text-warning"> · faltan {i.missing}</span>
+                          ) : (
+                            <span className="text-success"> · suficiente</span>
+                          )}
+                        </span>
+                      ) : null}
                     </span>
-                  ) : null}
-                </li>
-              ))}
-            </ul>
+                    {i.needed ? (
+                      <span className="shrink-0 text-muted">
+                        ×{i.needed}
+                        {i.unit ? ` ${i.unit}` : ''}
+                      </span>
+                    ) : null}
+                  </li>
+                ))}
+              </ul>
+              {missingRows.length > 0 ? (
+                <Button
+                  variant="secondary"
+                  className="mt-2 w-full"
+                  onClick={addMissingToShoppingList}
+                >
+                  <ShoppingCart size={16} aria-hidden="true" />
+                  Añadir lo que falta a la compra ({missingRows.length})
+                </Button>
+              ) : null}
+            </>
           )}
         </div>
-
-        {plannedCount > 0 ? (
-          <p className="text-xs text-muted">
-            {plannedCount} comida{plannedCount === 1 ? '' : 's'} planificada
-            {plannedCount === 1 ? '' : 's'}.
-          </p>
-        ) : null}
       </div>
     </Sheet>
+  );
+}
+
+interface DayRowProps {
+  dayLabel: string;
+  day: number;
+  assignments: Record<string, string>;
+  recipes: { id: string; name: string }[];
+  onChange: (day: number, slot: MealSlot, recipeId: string) => void;
+}
+
+function DayRow({ dayLabel, day, assignments, recipes, onChange }: DayRowProps) {
+  return (
+    <>
+      <span className="text-xs font-medium text-muted" title={dayLabel}>
+        {dayLabel.slice(0, 3)}
+      </span>
+      {MEAL_SLOTS.map(({ slot, label }) => (
+        <Select
+          key={slot}
+          aria-label={`${label} del ${dayLabel}`}
+          value={assignments[slotKey(day, slot)] ?? ''}
+          onChange={(e) => onChange(day, slot, e.target.value)}
+        >
+          <option value="">—</option>
+          {recipes.map((r) => (
+            <option key={r.id} value={r.id}>
+              {r.name}
+            </option>
+          ))}
+        </Select>
+      ))}
+    </>
   );
 }

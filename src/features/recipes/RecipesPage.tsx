@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CalendarDays, ChefHat, Sparkles, Utensils } from 'lucide-react';
 import type { Recipe } from '@/domain/recipe/recipe.types';
-import { normalizeText } from '@/domain/inventory/inventory-view';
 import { recipeService } from '@/services/recipe/recipe.service';
+import { matchIngredientsToProducts } from '@/services/recipe/ingredient-match';
 import { type SuggestedRecipe } from '@/services/recipe/suggest.service';
 import { toast } from '@/stores/toast.store';
 import { Fab } from '@/components/ui/Fab';
@@ -56,18 +56,10 @@ export function RecipesPage() {
 
   // Guarda una sugerencia como receta, emparejando ingredientes con el inventario.
   const saveSuggestion = async (s: SuggestedRecipe) => {
-    const findProduct = (ingName: string) => {
-      const n = normalizeText(ingName);
-      return products.find((p) => {
-        const pn = normalizeText(p.name);
-        return pn === n || pn.includes(n) || n.includes(pn);
-      });
-    };
-    const ingredients = s.ingredientes
-      .map((i) => findProduct(i.nombre))
-      .filter((p): p is NonNullable<typeof p> => Boolean(p))
-      .map((p) => ({ productId: p.id, quantity: 1, unitId: p.unitId }));
-    const missing = s.ingredientes.filter((i) => !findProduct(i.nombre)).map((i) => i.nombre);
+    const { ingredients, missing } = matchIngredientsToProducts(
+      s.ingredientes.map((i) => i.nombre),
+      products,
+    );
     const description = [s.pasos.join('\n'), missing.length ? `Faltan: ${missing.join(', ')}` : '']
       .filter(Boolean)
       .join('\n\n');

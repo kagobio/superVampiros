@@ -4,6 +4,7 @@ import { baseEntity } from '@/domain/shared/entity';
 import type { MealPlan } from './meal-plan.types';
 import {
   aggregatePlanIngredients,
+  computeMissingIngredients,
   entriesToMap,
   mapToEntries,
   slotKey,
@@ -97,5 +98,34 @@ describe('aggregatePlanIngredients', () => {
       recipes,
     );
     expect(result).toHaveLength(2);
+  });
+});
+
+describe('computeMissingIngredients', () => {
+  const aggregated = [
+    { productId: 'arroz', quantity: 5, unitId: null },
+    { productId: 'pollo', quantity: 2, unitId: 'kg' },
+    { productId: 'sal', quantity: 1, unitId: null },
+  ];
+
+  it('resta el stock y devuelve solo lo que falta', () => {
+    const stock = new Map([
+      ['arroz', 2], // faltan 3
+      ['pollo', 5], // sobra, no aparece
+      // sal no está en stock → faltan 1
+    ]);
+    const missing = computeMissingIngredients(aggregated, stock);
+    expect(missing.map((m) => m.productId).sort()).toEqual(['arroz', 'sal']);
+    const arroz = missing.find((m) => m.productId === 'arroz');
+    expect(arroz).toMatchObject({ needed: 5, available: 2, missing: 3 });
+  });
+
+  it('no devuelve nada si hay stock de sobra para todo', () => {
+    const stock = new Map([
+      ['arroz', 10],
+      ['pollo', 10],
+      ['sal', 10],
+    ]);
+    expect(computeMissingIngredients(aggregated, stock)).toEqual([]);
   });
 });

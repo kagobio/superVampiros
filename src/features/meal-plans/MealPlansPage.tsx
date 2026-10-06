@@ -1,18 +1,25 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, CalendarDays } from 'lucide-react';
+import { ArrowLeft, CalendarDays, Pencil, Sparkles } from 'lucide-react';
 import type { MealPlan } from '@/domain/meal-plan/meal-plan.types';
+import type { GeneratedMenu } from '@/services/meal-plan/suggest-menu.service';
+import { toast } from '@/stores/toast.store';
 import { Fab } from '@/components/ui/Fab';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { useProducts } from '@/features/inventory/hooks/useProducts';
 import { useMealPlans } from './hooks/useMealPlans';
 import { MealPlanEditorSheet } from './components/MealPlanEditorSheet';
+import { MealPlanGeneratorSheet } from './components/MealPlanGeneratorSheet';
+import { createMenuFromGenerated } from './build-from-generated';
 
 export function MealPlansPage() {
   const plans = useMealPlans();
+  const products = useProducts();
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editing, setEditing] = useState<MealPlan | null>(null);
   const [openKey, setOpenKey] = useState(0);
+  const [genOpen, setGenOpen] = useState(false);
 
   const openEditor = (plan: MealPlan | null) => {
     setEditing(plan);
@@ -20,6 +27,17 @@ export function MealPlansPage() {
     setSheetOpen(true);
   };
   const openCreate = () => openEditor(null);
+
+  const itemsInStock = products.filter((p) => p.quantity > 0).map((p) => p.name);
+
+  // La IA devuelve el menú; aquí lo materializamos (recetas + menú) y lo abrimos
+  // en el editor para que el usuario lo revise y ajuste.
+  const handleGenerated = async (menu: GeneratedMenu) => {
+    const plan = await createMenuFromGenerated(menu, products);
+    setGenOpen(false);
+    toast('Menú generado. Revísalo y ajústalo si quieres.', 'success');
+    openEditor(plan);
+  };
 
   return (
     <div className="space-y-4">
@@ -35,12 +53,22 @@ export function MealPlansPage() {
         <span className="text-sm text-muted">{plans.length}</span>
       </div>
 
+      <Button className="w-full" onClick={() => setGenOpen(true)}>
+        <Sparkles size={18} aria-hidden="true" />
+        Generar menú con IA
+      </Button>
+
       {plans.length === 0 ? (
         <EmptyState
           icon={CalendarDays}
           title="Aún no hay menús"
-          description="Planifica la comida y la cena de cada día con tus recetas. El menú te muestra la lista de ingredientes que necesitas."
-          action={<Button onClick={openCreate}>Crear menú</Button>}
+          description="Genera un menú con IA según tus preferencias, o créalo a mano asignando recetas a cada día. El menú te muestra los ingredientes que necesitas."
+          action={
+            <Button variant="secondary" onClick={openCreate}>
+              <Pencil size={16} aria-hidden="true" />
+              Crear a mano
+            </Button>
+          }
         />
       ) : (
         <ul className="space-y-2">
@@ -68,7 +96,15 @@ export function MealPlansPage() {
         </ul>
       )}
 
-      <Fab onClick={openCreate} label="Crear menú" />
+      <Fab onClick={openCreate} label="Crear menú a mano" />
+
+      <MealPlanGeneratorSheet
+        key={`gen-${genOpen}`}
+        open={genOpen}
+        onClose={() => setGenOpen(false)}
+        items={itemsInStock}
+        onGenerated={handleGenerated}
+      />
 
       <MealPlanEditorSheet
         key={openKey}

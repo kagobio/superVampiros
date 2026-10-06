@@ -9,6 +9,7 @@ import { MorePage } from '@/features/settings/MorePage';
 import { TaxonomySettingsPage } from '@/features/settings/TaxonomySettingsPage';
 import { HistoryPage } from '@/features/history/HistoryPage';
 import { StatisticsPage } from '@/features/statistics/StatisticsPage';
+import { MonthlyPurchasesPage } from '@/features/statistics/MonthlyPurchasesPage';
 import { SettingsPage } from '@/features/settings/SettingsPage';
 import { PacksPage } from '@/features/packs/PacksPage';
 import { NotFoundPage } from '@/components/ui/NotFoundPage';
@@ -27,6 +28,7 @@ export const router = createBrowserRouter([
       { path: 'ajustes/taxonomias', element: <TaxonomySettingsPage /> },
       { path: 'historial', element: <HistoryPage /> },
       { path: 'estadisticas', element: <StatisticsPage /> },
+      { path: 'compras-mes', element: <MonthlyPurchasesPage /> },
       { path: 'packs', element: <PacksPage /> },
       { path: 'ajustes', element: <SettingsPage /> },
       { path: '*', element: <NotFoundPage /> },

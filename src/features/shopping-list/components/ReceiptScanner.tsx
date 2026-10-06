@@ -1,11 +1,13 @@
 import { useRef, useState, type ChangeEvent } from 'react';
-import { Loader2, Plus, Receipt, Trash2 } from 'lucide-react';
+import { FileText, Loader2, Plus, Receipt, Trash2 } from 'lucide-react';
 import {
   applyReceiptItems,
   parseReceipt,
+  parseReceiptText,
   type ReceiptItem,
 } from '@/services/receipt/receipt.service';
 import { fileToDataUrl } from '@/lib/image';
+import { extractPdfText, renderPdfFirstPageToDataUrl } from '@/lib/pdf';
 import { toast } from '@/stores/toast.store';
 import { Sheet } from '@/components/ui/Sheet';
 import { Button } from '@/components/ui/Button';
@@ -28,6 +30,7 @@ export function ReceiptScanner() {
   const products = useProducts();
   const categories = useCategories();
   const inputRef = useRef<HTMLInputElement>(null);
+  const pdfInputRef = useRef<HTMLInputElement>(null);
   const [phase, setPhase] = useState<Phase>('idle');
   const [items, setItems] = useState<ReceiptItem[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -55,6 +58,33 @@ export function ReceiptScanner() {
     } catch (err) {
       setPhase('review');
       setError(err instanceof Error ? err.message : 'No se pudo leer el ticket.');
+    }
+  };
+
+  // Importa una factura/ticket en PDF: se intenta leer el TEXTO (facturas
+  // digitales); si el PDF es escaneado (sin texto), se renderiza a imagen y se
+  // usa la lectura por visión como respaldo.
+  const onPdf = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    setError(null);
+    setItems([]);
+    setPhase('reading');
+    try {
+      const text = await extractPdfText(file);
+      let parsed: ReceiptItem[];
+      if (text.length >= 20) {
+        parsed = await parseReceiptText(text);
+      } else {
+        const dataUrl = await renderPdfFirstPageToDataUrl(file);
+        parsed = await parseReceipt(dataUrl);
+      }
+      setItems(parsed);
+      setPhase('review');
+    } catch (err) {
+      setPhase('review');
+      setError(err instanceof Error ? err.message : 'No se pudo leer la factura PDF.');
     }
   };
 
@@ -98,10 +128,31 @@ export function ReceiptScanner() {
         className="hidden"
         onChange={onFile}
       />
-      <Button variant="secondary" className="w-full" onClick={() => inputRef.current?.click()}>
-        <Receipt size={18} aria-hidden="true" />
-        Escanear ticket
-      </Button>
+      <input
+        ref={pdfInputRef}
+        type="file"
+        accept="application/pdf"
+        className="hidden"
+        onChange={onPdf}
+      />
+      <div className="flex gap-2">
+        <Button
+          variant="secondary"
+          className="flex-1"
+          onClick={() => inputRef.current?.click()}
+        >
+          <Receipt size={18} aria-hidden="true" />
+          Escanear ticket
+        </Button>
+        <Button
+          variant="secondary"
+          className="flex-1"
+          onClick={() => pdfInputRef.current?.click()}
+        >
+          <FileText size={18} aria-hidden="true" />
+          Factura PDF
+        </Button>
+      </div>
 
       <Sheet
         open={open}
