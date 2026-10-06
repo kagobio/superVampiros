@@ -36,8 +36,8 @@ export function Fab({
       className={cn(
         'fixed right-4 z-30 flex h-14 w-14 items-center justify-center rounded-2xl mb-[env(safe-area-inset-bottom)]',
         variant === 'primary'
-          ? 'bg-primary text-primary-fg shadow-[0_12px_28px_-10px_rgba(0,0,0,0.5)] hover:bg-primary-hover'
-          : 'border border-border bg-surface text-text shadow-[0_10px_24px_-12px_rgba(0,0,0,0.45)] hover:bg-surface-2',
+          ? 'bg-primary text-primary-fg shadow-[0_8px_22px_-8px_color-mix(in_oklab,var(--primary)_60%,transparent)] hover:bg-primary-hover'
+          : 'border border-border bg-surface text-text shadow-soft hover:bg-surface-2',
         className ?? 'bottom-20',
       )}
     >

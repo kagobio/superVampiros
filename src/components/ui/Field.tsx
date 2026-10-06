@@ -34,6 +34,7 @@ export function Field({ label, error, hint, children }: FieldProps) {
 
 /** Clases compartidas por los controles de formulario. */
 export const controlClass =
-  'w-full rounded-xl border border-border bg-surface-2 px-3 text-sm text-text ' +
-  'placeholder:text-muted transition-colors focus-visible:border-primary ' +
-  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--ring)]';
+  'w-full rounded-xl border border-border bg-surface px-3 text-sm text-text ' +
+  'placeholder:text-muted transition-[border-color,box-shadow] hover:border-muted/50 ' +
+  'focus-visible:border-primary focus-visible:outline-none ' +
+  'focus-visible:ring-2 focus-visible:ring-[color:var(--ring)]';
