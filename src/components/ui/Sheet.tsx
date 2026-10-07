@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import {
   AnimatePresence,
   motion,
@@ -87,7 +88,11 @@ export function Sheet({ open, onClose, title, children, footer }: SheetProps) {
     }
   };
 
-  return (
+  // Se renderiza en un portal a <body> para salir del contexto de apilamiento
+  // de <main> (que tiene z-10). Si no, el panel —aunque sea z-50— queda por
+  // debajo de la barra de navegación inferior (z-20, hermana de <main>), que
+  // tapaba el pie con el botón de guardar.
+  return createPortal(
     <AnimatePresence>
       {open ? (
         <div className="fixed inset-0 z-50 flex flex-col justify-end">
@@ -143,6 +148,7 @@ export function Sheet({ open, onClose, title, children, footer }: SheetProps) {
           </motion.div>
         </div>
       ) : null}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body,
   );
 }

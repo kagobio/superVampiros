@@ -225,14 +225,18 @@ export function MealPlanEditorSheet({ open, onClose, plan }: MealPlanEditorSheet
       footer={
         <div className="flex items-center gap-2">
           {isEdit ? (
-            <Button variant="ghost" onClick={handleDelete} className="text-danger">
+            <Button
+              variant="ghost"
+              onClick={handleDelete}
+              className="shrink-0 text-danger"
+              aria-label="Eliminar menú"
+            >
               <Trash2 size={18} aria-hidden="true" />
-              Eliminar
             </Button>
           ) : null}
-          <Button onClick={handleSave} className="ml-auto">
+          <Button onClick={handleSave} className="flex-1 justify-center">
             <Check size={18} aria-hidden="true" />
-            {isEdit ? 'Guardar menú' : 'Guardar menú'}
+            Guardar menú
           </Button>
         </div>
       }
@@ -245,7 +249,6 @@ export function MealPlanEditorSheet({ open, onClose, plan }: MealPlanEditorSheet
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Semana normal"
-              autoFocus
             />
           )}
         </Field>

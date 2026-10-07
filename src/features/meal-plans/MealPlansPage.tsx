@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { ArrowLeft, CalendarDays, ChevronRight, Pencil, Sparkles } from 'lucide-react';
 import type { MealPlan } from '@/domain/meal-plan/meal-plan.types';
 import type { GeneratedMenu } from '@/services/meal-plan/suggest-menu.service';
@@ -29,6 +29,22 @@ export function MealPlansPage() {
     setSheetOpen(true);
   };
   const openCreate = () => openEditor(null);
+
+  // Abre directamente un menú si se llega aquí con `openPlanId` en el estado de
+  // navegación (p. ej. desde la tarjeta «Hoy» del inicio). Solo una vez, cuando
+  // los menús ya han cargado (useLiveQuery es asíncrono), por eso va en efecto.
+  const location = useLocation();
+  const openedFromState = useRef(false);
+  useEffect(() => {
+    if (openedFromState.current) return;
+    const openPlanId = (location.state as { openPlanId?: string } | null)?.openPlanId;
+    if (!openPlanId) return;
+    const plan = plans.find((p) => p.id === openPlanId);
+    if (!plan) return;
+    openedFromState.current = true;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- abrir la hoja al llegar con intención de navegación, una vez cargados los menús
+    openEditor(plan);
+  }, [location.state, plans]);
 
   const itemsInStock = products.filter((p) => p.quantity > 0).map((p) => p.name);
   const favoriteNames = recipes.filter((r) => r.favorite).map((r) => r.name);
