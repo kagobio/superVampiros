@@ -148,7 +148,7 @@ export function MealPlansPage() {
                     className="shrink-0 text-muted/60 transition-transform group-hover:translate-x-0.5"
                   />
                 </span>
-                <WeekTable plan={plan} recipeNameById={recipeNameById} todayIndex={todayIndex} />
+                <WeekCalendar plan={plan} recipeNameById={recipeNameById} todayIndex={todayIndex} />
               </button>
             </li>
           ))}
@@ -176,65 +176,73 @@ export function MealPlansPage() {
   );
 }
 
-interface WeekTableProps {
+interface WeekCalendarProps {
   plan: MealPlan;
   recipeNameById: Map<Id, string>;
   todayIndex: number;
 }
 
 /**
- * Tabla compacta de un menú: una fila por día con la comida y la cena, para
- * ver la semana entera de un vistazo sin abrir el editor. Resalta el día de
- * hoy. Solo texto (va dentro del botón de la tarjeta, que abre el editor).
+ * Calendario de un menú: una casilla por día (estilo cuadrícula semanal) con
+ * la comida y la cena dentro, para ver toda la semana de un vistazo sin abrir
+ * el editor. Resalta el día de hoy. Domingo ocupa el ancho completo para que
+ * la cuadrícula quede equilibrada. Solo texto (va dentro del botón de la
+ * tarjeta, que abre el editor).
  */
-function WeekTable({ plan, recipeNameById, todayIndex }: WeekTableProps) {
+function WeekCalendar({ plan, recipeNameById, todayIndex }: WeekCalendarProps) {
   const byKey = entriesToMap(plan.entries);
   const nameAt = (day: number, slot: 'lunch' | 'dinner') => {
     const id = byKey.get(slotKey(day, slot));
     return id ? (recipeNameById.get(id) ?? null) : null;
   };
 
+  const empty = <span className="text-muted/50">—</span>;
+
   return (
-    <div className="mt-3 overflow-hidden rounded-xl border border-border">
-      <div className="grid grid-cols-[2.4rem_1fr_1fr] bg-surface-2/60 text-[0.62rem] font-semibold uppercase tracking-wide text-muted">
-        <div className="px-2 py-1.5" aria-hidden="true" />
-        <div className="flex items-center gap-1 px-2 py-1.5">
-          <Sun size={11} aria-hidden="true" />
-          Comida
-        </div>
-        <div className="flex items-center gap-1 border-l border-border px-2 py-1.5">
-          <Moon size={11} aria-hidden="true" />
-          Cena
-        </div>
-      </div>
-      <div className="divide-y divide-border">
-        {WEEK_DAYS.map((dayLabel, day) => {
-          const isToday = day === todayIndex;
-          const lunch = nameAt(day, 'lunch');
-          const dinner = nameAt(day, 'dinner');
-          return (
-            <div
-              key={dayLabel}
-              className={cn('grid grid-cols-[2.4rem_1fr_1fr] text-xs', isToday && 'bg-primary/[0.07]')}
-            >
-              <div
+    <div className="mt-3 grid grid-cols-2 gap-2">
+      {WEEK_DAYS.map((dayLabel, day) => {
+        const isToday = day === todayIndex;
+        const lunch = nameAt(day, 'lunch');
+        const dinner = nameAt(day, 'dinner');
+        return (
+          <div
+            key={dayLabel}
+            className={cn(
+              'flex flex-col rounded-xl border p-2.5',
+              day === WEEK_DAYS.length - 1 && 'col-span-2',
+              isToday
+                ? 'border-primary/40 bg-gradient-to-br from-primary/[0.08] to-primary/[0.02] ring-1 ring-primary/20'
+                : 'border-border bg-surface-2/30',
+            )}
+          >
+            <div className="mb-1.5 flex items-center justify-between gap-1">
+              <span
                 className={cn(
-                  'flex items-center px-2 py-1.5 text-[0.62rem] font-semibold uppercase tracking-wide',
+                  'text-[0.68rem] font-bold uppercase tracking-wide',
                   isToday ? 'text-primary' : 'text-muted',
                 )}
               >
-                {dayLabel.slice(0, 3)}
+                {dayLabel}
+              </span>
+              {isToday ? (
+                <span className="rounded-full bg-primary px-1.5 py-0.5 text-[0.55rem] font-bold uppercase tracking-wide text-primary-fg">
+                  Hoy
+                </span>
+              ) : null}
+            </div>
+            <div className="space-y-1">
+              <div className="flex items-start gap-1.5">
+                <Sun size={12} aria-hidden="true" className="mt-0.5 shrink-0 text-muted" />
+                <span className="text-xs leading-snug text-text">{lunch ?? empty}</span>
               </div>
-              <div className="px-2 py-1.5 text-text">
-                {lunch ?? <span className="text-muted/50">—</span>}
-              </div>
-              <div className="border-l border-border px-2 py-1.5 text-text">
-                {dinner ?? <span className="text-muted/50">—</span>}
+              <div className="flex items-start gap-1.5">
+                <Moon size={12} aria-hidden="true" className="mt-0.5 shrink-0 text-muted" />
+                <span className="text-xs leading-snug text-text">{dinner ?? empty}</span>
               </div>
             </div>
-          );
-        })}
-      </div>
+          </div>
+        );
+      })}
     </div>
   );
 }
