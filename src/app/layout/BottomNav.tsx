@@ -48,7 +48,7 @@ export function BottomNav() {
                     <motion.span
                       layoutId="nav-active-pill"
                       aria-hidden="true"
-                      className="absolute inset-x-2 inset-y-1 -z-10 rounded-xl bg-primary/10"
+                      className="absolute inset-x-2 inset-y-1 -z-10 rounded-2xl bg-primary/15 ring-1 ring-inset ring-primary/25"
                       transition={
                         reduce
                           ? { duration: 0 }
@@ -56,8 +56,16 @@ export function BottomNav() {
                       }
                     />
                   ) : null}
-                  <Icon size={22} strokeWidth={isActive ? 2.4 : 1.8} aria-hidden="true" />
-                  <span>{label}</span>
+                  <motion.span
+                    aria-hidden="true"
+                    animate={reduce ? undefined : { scale: isActive ? 1.15 : 1, y: isActive ? -1 : 0 }}
+                    transition={
+                      reduce ? { duration: 0 } : { type: 'spring', stiffness: 520, damping: 20, mass: 0.6 }
+                    }
+                  >
+                    <Icon size={22} strokeWidth={isActive ? 2.5 : 1.8} aria-hidden="true" />
+                  </motion.span>
+                  <span className={isActive ? 'font-semibold' : undefined}>{label}</span>
                 </>
               )}
             </NavLink>

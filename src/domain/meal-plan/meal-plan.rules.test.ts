@@ -6,6 +6,7 @@ import {
   aggregatePlanIngredients,
   computeMissingIngredients,
   entriesToMap,
+  fillSlotsWithFavorites,
   mapToEntries,
   slotKey,
 } from './meal-plan.rules';
@@ -98,6 +99,43 @@ describe('aggregatePlanIngredients', () => {
       recipes,
     );
     expect(result).toHaveLength(2);
+  });
+});
+
+describe('fillSlotsWithFavorites', () => {
+  it('rellena los 14 huecos vacíos recorriendo las favoritas', () => {
+    const result = fillSlotsWithFavorites(new Map(), ['f1', 'f2']);
+    expect(result.size).toBe(14);
+    expect(result.get(slotKey(0, 'lunch'))).toBe('f1');
+    expect(result.get(slotKey(0, 'dinner'))).toBe('f2');
+  });
+
+  it('no toca los huecos ya ocupados', () => {
+    const current = new Map<string, string>([[slotKey(0, 'lunch'), 'mia']]);
+    const result = fillSlotsWithFavorites(current, ['f1', 'f2']);
+    expect(result.get(slotKey(0, 'lunch'))).toBe('mia');
+    expect(result.size).toBe(14);
+  });
+
+  it('evita repetir la misma favorita en dos huecos seguidos', () => {
+    const result = fillSlotsWithFavorites(new Map(), ['f1', 'f2']);
+    const ordered = [];
+    for (let day = 0; day < 7; day++) {
+      ordered.push(result.get(slotKey(day, 'lunch')), result.get(slotKey(day, 'dinner')));
+    }
+    for (let i = 1; i < ordered.length; i++) {
+      expect(ordered[i]).not.toBe(ordered[i - 1]);
+    }
+  });
+
+  it('con una sola favorita la usa en todos los huecos', () => {
+    const result = fillSlotsWithFavorites(new Map(), ['solo']);
+    expect([...result.values()].every((v) => v === 'solo')).toBe(true);
+  });
+
+  it('sin favoritas no cambia nada', () => {
+    const current = new Map<string, string>([[slotKey(1, 'dinner'), 'x']]);
+    expect(fillSlotsWithFavorites(current, [])).toEqual(current);
   });
 });
 

@@ -14,6 +14,7 @@ export interface NewRecipeInput {
   description?: string;
   servings?: number | null;
   ingredients?: RecipeIngredient[];
+  favorite?: boolean;
 }
 
 /**
@@ -46,6 +47,7 @@ export class RecipeService {
       description: input.description?.trim() ?? '',
       servings: input.servings ?? null,
       ingredients: input.ingredients ?? [],
+      favorite: input.favorite ?? false,
     };
     await this.repo.create(recipe);
     await this.history.record('create', 'recipe', recipe.id, { name: recipe.name });

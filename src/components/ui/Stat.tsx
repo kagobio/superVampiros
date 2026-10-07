@@ -32,7 +32,7 @@ export function Stat({ label, value, icon: Icon, tone = 'default', onClick }: St
       >
         <Icon size={18} aria-hidden="true" />
       </span>
-      <span className="mt-3 block text-[1.75rem] font-semibold leading-none tabular-nums tracking-[-0.02em] text-text">
+      <span className="mt-3 block font-display text-[1.9rem] font-bold leading-none tabular-nums tracking-[-0.02em] text-text">
         {value}
       </span>
       <span className="mt-1 block text-xs font-medium text-muted">{label}</span>

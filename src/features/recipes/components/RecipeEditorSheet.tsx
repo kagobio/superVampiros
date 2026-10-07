@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/Button';
 import { Field } from '@/components/ui/Field';
 import { Input } from '@/components/ui/Input';
 import { TextArea } from '@/components/ui/TextArea';
+import { Switch } from '@/components/ui/Switch';
 import { ProductLinesEditor, type ProductLine } from '@/components/ui/ProductLinesEditor';
 import { useUnits } from '@/hooks/useTaxonomies';
 import { useProducts } from '@/features/inventory/hooks/useProducts';
@@ -28,6 +29,7 @@ export function RecipeEditorSheet({ open, onClose, recipe }: RecipeEditorSheetPr
   const [servings, setServings] = useState(recipe?.servings != null ? String(recipe.servings) : '');
   const [description, setDescription] = useState(recipe?.description ?? '');
   const [lines, setLines] = useState<ProductLine[]>(recipe?.ingredients ?? []);
+  const [favorite, setFavorite] = useState(recipe?.favorite ?? false);
 
   const isEdit = recipe !== null;
 
@@ -38,6 +40,7 @@ export function RecipeEditorSheet({ open, onClose, recipe }: RecipeEditorSheetPr
       description,
       servings: servings === '' ? null : Number(servings),
       ingredients: lines,
+      favorite,
     };
     if (isEdit) await recipeService.update(recipe.id, payload);
     else await recipeService.create(payload);
@@ -98,6 +101,21 @@ export function RecipeEditorSheet({ open, onClose, recipe }: RecipeEditorSheetPr
             </div>
           )}
         </Field>
+
+        <div className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-surface p-3">
+          <label htmlFor="recipe-favorite" className="min-w-0">
+            <span className="block text-sm font-medium text-text">Comida habitual</span>
+            <span className="block text-xs text-muted">
+              Se prioriza al generar el menú con IA y se coloca rápido en la semana.
+            </span>
+          </label>
+          <Switch
+            id="recipe-favorite"
+            checked={favorite}
+            onChange={setFavorite}
+            label="Marcar como comida habitual"
+          />
+        </div>
 
         <div>
           <p className="mb-1.5 text-sm font-medium text-text">Ingredientes</p>

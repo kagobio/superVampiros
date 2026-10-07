@@ -17,11 +17,11 @@ export function AnimatedListItem({ children, className }: AnimatedListItemProps)
   return (
     <motion.li
       layout={reduce ? false : 'position'}
-      initial={reduce ? false : { opacity: 0, scale: 0.97 }}
-      animate={reduce ? undefined : { opacity: 1, scale: 1 }}
+      initial={reduce ? false : { opacity: 0, y: 10, scale: 0.98 }}
+      animate={reduce ? undefined : { opacity: 1, y: 0, scale: 1 }}
       exit={reduce ? undefined : { opacity: 0, scale: 0.97 }}
       transition={
-        reduce ? { duration: 0 } : { type: 'spring', stiffness: 500, damping: 40, mass: 0.6 }
+        reduce ? { duration: 0 } : { type: 'spring', stiffness: 480, damping: 34, mass: 0.6 }
       }
       className={className}
     >

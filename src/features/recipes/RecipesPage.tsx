@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CalendarDays, ChefHat, Sparkles, Utensils } from 'lucide-react';
+import { CalendarDays, ChefHat, Heart, Sparkles, Star, Utensils } from 'lucide-react';
 import type { Recipe } from '@/domain/recipe/recipe.types';
 import { recipeService } from '@/services/recipe/recipe.service';
+import { addHabitualMeals } from '@/services/recipe/habitual-meals.service';
 import { matchIngredientsToProducts } from '@/services/recipe/ingredient-match';
 import { type SuggestedRecipe } from '@/services/recipe/suggest.service';
 import { toast } from '@/stores/toast.store';
@@ -70,6 +71,30 @@ export function RecipesPage() {
     toast(`Receta guardada: ${s.nombre}`, 'success');
   };
 
+  // Crea (sin duplicar) las comidas habituales de la casa como recetas favoritas.
+  const addHabituals = async () => {
+    const { created, skipped } = await addHabitualMeals(products);
+    if (created > 0) {
+      toast(`${created} comida${created === 1 ? '' : 's'} habitual${created === 1 ? '' : 'es'} añadida${created === 1 ? '' : 's'}`, 'success');
+    } else {
+      toast(skipped > 0 ? 'Ya tienes tus comidas habituales' : 'No hay comidas que añadir', 'default');
+    }
+  };
+
+  const toggleFavorite = async (recipe: Recipe) => {
+    await recipeService.update(recipe.id, { favorite: !recipe.favorite });
+  };
+
+  // Favoritas (comidas habituales) primero; dentro, orden por nombre.
+  const sortedRecipes = useMemo(
+    () =>
+      [...recipes].sort((a, b) => {
+        if (Boolean(a.favorite) !== Boolean(b.favorite)) return a.favorite ? -1 : 1;
+        return a.name.localeCompare(b.name, 'es', { sensitivity: 'base' });
+      }),
+    [recipes],
+  );
+
   const chatItems = products.filter((p) => p.quantity > 0).map((p) => p.name);
 
   return (
@@ -98,21 +123,55 @@ export function RecipesPage() {
         Menús semanales
       </Button>
 
+      <Button variant="ghost" className="w-full" onClick={addHabituals}>
+        <Heart size={18} aria-hidden="true" />
+        Añadir comidas habituales
+      </Button>
+
       {recipes.length === 0 ? (
         <EmptyState
           icon={ChefHat}
           title="Aún no hay recetas"
-          description="Crea una receta con sus ingredientes. Al cocinarla, se descuentan del inventario."
-          action={<Button onClick={openCreate}>Crear receta</Button>}
+          description="Añade tus comidas habituales de un toque, o crea una receta con sus ingredientes. Al cocinarla, se descuentan del inventario."
+          action={
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              <Button onClick={addHabituals}>
+                <Heart size={16} aria-hidden="true" />
+                Añadir comidas habituales
+              </Button>
+              <Button variant="secondary" onClick={openCreate}>
+                Crear receta
+              </Button>
+            </div>
+          }
         />
       ) : (
         <ul className="space-y-2">
           <AnimatePresence initial={false}>
-            {recipes.map((recipe) => (
+            {sortedRecipes.map((recipe) => (
               <AnimatedListItem
                 key={recipe.id}
-                className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-3"
+                className="flex items-center gap-2 rounded-2xl border border-border bg-surface p-3"
               >
+                <button
+                  type="button"
+                  onClick={() => toggleFavorite(recipe)}
+                  aria-pressed={Boolean(recipe.favorite)}
+                  aria-label={
+                    recipe.favorite ? `Quitar ${recipe.name} de favoritas` : `Marcar ${recipe.name} como favorita`
+                  }
+                  className={
+                    recipe.favorite
+                      ? 'flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-primary transition-colors hover:bg-surface-2'
+                      : 'flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-muted transition-colors hover:bg-surface-2 hover:text-text'
+                  }
+                >
+                  <Star
+                    size={18}
+                    aria-hidden="true"
+                    fill={recipe.favorite ? 'currentColor' : 'none'}
+                  />
+                </button>
                 <button
                   type="button"
                   onClick={() => openEditor(recipe)}

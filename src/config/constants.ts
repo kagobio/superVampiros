@@ -2,7 +2,7 @@
 
 export const APP_NAME = 'Alimentos Vampíricos';
 
-/** Color por defecto para nuevos productos (vino sobrio). */
+/** Color por defecto para nuevos productos (vino de marca). */
 export const DEFAULT_PRODUCT_COLOR = '#93202E';
 
 /** Icono por defecto para nuevos productos ('' = icono de reserva del avatar). */
@@ -10,8 +10,7 @@ export const DEFAULT_PRODUCT_ICON = '';
 
 /**
  * Paleta de colores sugerida para el ColorPicker de productos/categorías.
- * Curada para el sistema «Carmesí editorial»: tonos cálidos y naturales que
- * conviven con el acento vino sin competir con él.
+ * Tonos cálidos y naturales que conviven con el acento vino sin competir con él.
  */
 export const PALETTE = [
   '#93202E',

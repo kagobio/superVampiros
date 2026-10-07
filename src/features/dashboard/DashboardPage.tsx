@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion, useReducedMotion } from 'framer-motion';
 import {
   Boxes,
   CalendarX2,
@@ -26,6 +27,7 @@ export function DashboardPage() {
   const settings = useSettings();
   const applyPreset = useFiltersStore((s) => s.applyPreset);
   const navigate = useNavigate();
+  const reduce = useReducedMotion();
   const [now] = useState(() => Date.now());
 
   const stats = useMemo(
@@ -61,58 +63,86 @@ export function DashboardPage() {
     );
   }
 
+  const statCards = [
+    { label: 'Productos', value: stats.total, icon: Boxes, onClick: () => goToInventory({}) },
+    {
+      label: 'Para comprar',
+      value: stats.toBuy,
+      icon: ShoppingCart,
+      tone: 'primary' as const,
+      onClick: () => goToInventory({ quick: ['toBuy'] }),
+    },
+    {
+      label: 'Agotados',
+      value: stats.outOfStock,
+      icon: PackageX,
+      tone: 'danger' as const,
+      onClick: () => goToInventory({ quick: ['out'] }),
+    },
+    {
+      label: 'Caducan pronto',
+      value: stats.expiringSoon,
+      icon: Clock,
+      tone: 'warning' as const,
+      onClick: () => goToInventory({ expiryWindow: 'soon' }),
+    },
+    {
+      label: 'Caducados',
+      value: stats.expired,
+      icon: CalendarX2,
+      tone: 'danger' as const,
+      onClick: () => goToInventory({ expiryWindow: 'expired' }),
+    },
+    {
+      label: 'Favoritos',
+      value: stats.favorites,
+      icon: Star,
+      tone: 'warning' as const,
+      onClick: () => goToInventory({ quick: ['favorites'] }),
+    },
+  ];
+
   return (
     <div className="space-y-6">
       <header className="space-y-1">
-        <h1 className="text-[1.75rem]">Inicio</h1>
+        <h1 className="text-[2.1rem] leading-[1.05]">
+          Hola, <span className="text-gradient-primary">a cocinar</span>
+        </h1>
         <p className="text-sm text-muted">
           {stats.total} {stats.total === 1 ? 'producto' : 'productos'} en tu despensa.
         </p>
       </header>
 
-      <section aria-label="Resumen" className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
-        <Stat
-          label="Productos"
-          value={stats.total}
-          icon={Boxes}
-          onClick={() => goToInventory({})}
-        />
-        <Stat
-          label="Para comprar"
-          value={stats.toBuy}
-          icon={ShoppingCart}
-          tone="primary"
-          onClick={() => goToInventory({ quick: ['toBuy'] })}
-        />
-        <Stat
-          label="Agotados"
-          value={stats.outOfStock}
-          icon={PackageX}
-          tone="danger"
-          onClick={() => goToInventory({ quick: ['out'] })}
-        />
-        <Stat
-          label="Caducan pronto"
-          value={stats.expiringSoon}
-          icon={Clock}
-          tone="warning"
-          onClick={() => goToInventory({ expiryWindow: 'soon' })}
-        />
-        <Stat
-          label="Caducados"
-          value={stats.expired}
-          icon={CalendarX2}
-          tone="danger"
-          onClick={() => goToInventory({ expiryWindow: 'expired' })}
-        />
-        <Stat
-          label="Favoritos"
-          value={stats.favorites}
-          icon={Star}
-          tone="warning"
-          onClick={() => goToInventory({ quick: ['favorites'] })}
-        />
-      </section>
+      <motion.section
+        aria-label="Resumen"
+        className="grid grid-cols-2 gap-2.5 sm:grid-cols-3"
+        initial={reduce ? false : 'hidden'}
+        animate={reduce ? undefined : 'show'}
+        variants={{ show: { transition: { staggerChildren: 0.05 } } }}
+      >
+        {statCards.map((s) => (
+          <motion.div
+            key={s.label}
+            variants={{
+              hidden: { opacity: 0, y: 14, scale: 0.97 },
+              show: {
+                opacity: 1,
+                y: 0,
+                scale: 1,
+                transition: { type: 'spring', stiffness: 460, damping: 32, mass: 0.6 },
+              },
+            }}
+          >
+            <Stat
+              label={s.label}
+              value={s.value}
+              icon={s.icon}
+              tone={s.tone}
+              onClick={s.onClick}
+            />
+          </motion.div>
+        ))}
+      </motion.section>
 
       {recent.length > 0 ? (
         <section aria-label="Añadidos recientemente" className="space-y-2">
