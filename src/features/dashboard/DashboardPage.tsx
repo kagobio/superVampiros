@@ -123,6 +123,7 @@ export function DashboardPage() {
         {statCards.map((s) => (
           <motion.div
             key={s.label}
+            className="h-full w-full"
             variants={{
               hidden: { opacity: 0, y: 14, scale: 0.97 },
               show: {
