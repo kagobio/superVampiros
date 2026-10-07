@@ -1,49 +1,46 @@
 @import 'tailwindcss';
 
 /*
- * SuperVampiros — Sistema de diseño «Fresco vibrante»
- * Un cambio radical respecto al look sobrio anterior: paleta jugosa y apetecible
- * (coral→mango con acento turquesa), formas redondeadas y generosas, sombras
- * suaves con brillo de color, tipografía de titulares con carácter (Bricolage
- * Grotesque) y movimiento fluido y dinámico. Los colores semánticos se
- * referencian con `@theme inline` para que cambien en caliente al alternar
- * `data-theme`.
+ * SuperVampiros — Sistema de diseño
+ * Mantiene la paleta vino «Carmesí» de siempre (acento vino + funcionales),
+ * pero con un lenguaje renovado: formas redondeadas y generosas, sombras suaves
+ * con brillo de color, degradado de marca dentro de la familia roja, tipografía
+ * de titulares con carácter (Bricolage Grotesque) y movimiento fluido y
+ * dinámico. Los colores semánticos se referencian con `@theme inline` para que
+ * cambien en caliente al alternar `data-theme`.
  */
 
 @custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
 
 /* ---- Paleta cruda (no usar directamente en componentes) ---- */
 :root {
-  /* Neutros claros, cálidos (arena muy suave, nada de gris frío) */
+  /* Neutros claros (gris muy leve, nada de crema) */
   --n-0: #ffffff;
-  --n-50: #fbf7f2;
-  --n-100: #f3ece3;
-  --n-200: #e8ddd0;
-  --n-700: #726a62;
-  --n-900: #1f1a16;
+  --n-50: #f5f4f2;
+  --n-100: #ecebe8;
+  --n-200: #e3e1dd;
+  --n-700: #6c6a70;
+  --n-900: #18171a;
 
-  /* Neutros oscuros (tinta cálida con un punto ciruela) */
-  --d-bg: #141017;
-  --d-surface: #1d1823;
-  --d-surface-2: #282130;
-  --d-line: #352c3e;
-  --d-text: #f5eef2;
-  --d-muted: #a99fac;
+  /* Neutros oscuros (carbón neutro) */
+  --d-bg: #101013;
+  --d-surface: #17171b;
+  --d-surface-2: #202026;
+  --d-line: #2b2b32;
+  --d-text: #ededf0;
+  --d-muted: #9896a0;
 
-  /* Acentos jugosos */
-  --coral: #ff5b2e;
-  --coral-strong: #f0410f;
-  --coral-bright: #ff7a4d;
-  --mango: #ff9f33;
-  --mango-bright: #ffb65c;
-  --teal: #10b6a4;
-  --teal-bright: #2fd7c3;
-  --grass: #27b268;
-  --grass-bright: #46d98a;
-  --amber: #e79a15;
-  --amber-bright: #f7c04a;
-  --berry: #ef4444;
-  --berry-bright: #ff6a63;
+  /* Acento vino + funcionales (paleta «Carmesí») */
+  --wine: #93202e;
+  --wine-strong: #a62434;
+  --wine-glow: #cf4051;
+  --wine-glow-hi: #dd5968;
+  --cherry: #c0283a;
+  --cherry-bright: #e05565;
+  --olive: #2c8a5e;
+  --olive-bright: #45bd86;
+  --saffron: #a96a1c;
+  --saffron-bright: #d79a45;
 }
 
 /* ---- Tokens semánticos: tema claro (por defecto) ---- */
@@ -55,24 +52,24 @@
   --border: var(--n-200);
   --text: var(--n-900);
   --muted: var(--n-700);
-  --primary: var(--coral);
-  --primary-hover: var(--coral-strong);
+  --primary: var(--wine);
+  --primary-hover: var(--wine-strong);
   --primary-fg: #ffffff;
-  --accent: var(--teal);
-  --danger: var(--berry);
-  --success: var(--grass);
-  --warning: var(--amber);
-  --ring: color-mix(in oklab, var(--coral) 45%, transparent);
+  --accent: var(--wine-strong);
+  --danger: var(--cherry);
+  --success: var(--olive);
+  --warning: var(--saffron);
+  --ring: color-mix(in oklab, var(--wine) 40%, transparent);
 
-  /* Degradado de marca: coral → mango. */
-  --gradient-primary: linear-gradient(135deg, var(--coral) 0%, var(--mango) 100%);
-  /* Auroras ambientales del fondo. */
-  --aurora-1: color-mix(in oklab, var(--coral) 32%, transparent);
-  --aurora-2: color-mix(in oklab, var(--teal) 28%, transparent);
+  /* Degradado de marca: vino → carmesí (dentro de la familia roja). */
+  --gradient-primary: linear-gradient(135deg, var(--wine) 0%, var(--cherry) 100%);
+  /* Auroras ambientales del fondo (tonos de la familia vino). */
+  --aurora-1: color-mix(in oklab, var(--wine) 26%, transparent);
+  --aurora-2: color-mix(in oklab, var(--wine-glow) 20%, transparent);
 
-  --shadow: 0 1px 2px rgb(31 26 22 / 0.05), 0 8px 24px -14px rgb(31 26 22 / 0.18);
-  --shadow-lift-raw: 0 2px 6px rgb(31 26 22 / 0.07), 0 18px 40px -20px rgb(31 26 22 / 0.3);
-  --shadow-glow-raw: 0 8px 24px -8px color-mix(in oklab, var(--coral) 55%, transparent);
+  --shadow: 0 1px 2px rgb(20 18 22 / 0.05), 0 8px 24px -14px rgb(20 18 22 / 0.16);
+  --shadow-lift-raw: 0 2px 6px rgb(20 18 22 / 0.07), 0 18px 40px -20px rgb(20 18 22 / 0.28);
+  --shadow-glow-raw: 0 8px 24px -8px color-mix(in oklab, var(--wine) 50%, transparent);
   color-scheme: light;
 }
 
@@ -84,22 +81,22 @@
   --border: var(--d-line);
   --text: var(--d-text);
   --muted: var(--d-muted);
-  --primary: var(--coral-bright);
-  --primary-hover: var(--coral);
-  --primary-fg: #1a0f08;
-  --accent: var(--teal-bright);
-  --danger: var(--berry-bright);
-  --success: var(--grass-bright);
-  --warning: var(--amber-bright);
-  --ring: color-mix(in oklab, var(--coral-bright) 60%, transparent);
+  --primary: var(--wine-glow);
+  --primary-hover: var(--wine-glow-hi);
+  --primary-fg: #ffffff;
+  --accent: #e78893;
+  --danger: var(--cherry-bright);
+  --success: var(--olive-bright);
+  --warning: var(--saffron-bright);
+  --ring: color-mix(in oklab, var(--wine-glow) 55%, transparent);
 
-  --gradient-primary: linear-gradient(135deg, var(--coral-bright) 0%, var(--mango-bright) 100%);
-  --aurora-1: color-mix(in oklab, var(--coral-bright) 26%, transparent);
-  --aurora-2: color-mix(in oklab, var(--teal-bright) 22%, transparent);
+  --gradient-primary: linear-gradient(135deg, var(--wine-glow) 0%, var(--wine-glow-hi) 100%);
+  --aurora-1: color-mix(in oklab, var(--wine-glow) 22%, transparent);
+  --aurora-2: color-mix(in oklab, var(--cherry-bright) 18%, transparent);
 
   --shadow: 0 1px 2px rgb(0 0 0 / 0.5), 0 14px 34px -16px rgb(0 0 0 / 0.7);
   --shadow-lift-raw: 0 2px 8px rgb(0 0 0 / 0.55), 0 24px 50px -22px rgb(0 0 0 / 0.75);
-  --shadow-glow-raw: 0 10px 30px -8px color-mix(in oklab, var(--coral-bright) 50%, transparent);
+  --shadow-glow-raw: 0 10px 30px -8px color-mix(in oklab, var(--wine-glow) 48%, transparent);
   color-scheme: dark;
 }
 
