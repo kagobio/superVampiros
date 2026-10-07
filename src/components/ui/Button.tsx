@@ -10,16 +10,18 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const base =
-  'inline-flex items-center justify-center gap-2 rounded-xl font-medium tracking-[-0.01em] transition ' +
-  'select-none active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 ' +
-  'motion-reduce:active:scale-100 focus-visible:outline-2 focus-visible:outline-offset-2';
+  'inline-flex items-center justify-center gap-2 rounded-2xl font-semibold tracking-[-0.01em] transition-[transform,box-shadow,background-color,filter,opacity] ' +
+  'select-none active:scale-[0.96] disabled:pointer-events-none disabled:opacity-50 ' +
+  'motion-reduce:active:scale-100 motion-reduce:hover:translate-y-0 focus-visible:outline-2 focus-visible:outline-offset-2';
 
 const variants: Record<Variant, string> = {
   primary:
-    'bg-primary text-primary-fg shadow-[0_1px_1px_rgb(20_18_22/0.12)] hover:bg-primary-hover',
-  secondary: 'bg-surface text-text border border-border hover:bg-surface-2',
+    'bg-gradient-primary text-primary-fg shadow-glow hover:-translate-y-0.5 hover:brightness-[1.05] hover:shadow-lift',
+  secondary:
+    'bg-surface text-text border border-border shadow-soft hover:-translate-y-0.5 hover:bg-surface-2 hover:shadow-lift',
   ghost: 'bg-transparent text-text hover:bg-surface-2',
-  danger: 'bg-danger text-primary-fg shadow-[0_1px_1px_rgb(20_18_22/0.12)] hover:opacity-90',
+  danger:
+    'bg-danger text-white shadow-[0_6px_18px_-8px_color-mix(in_oklab,var(--danger)_55%,transparent)] hover:-translate-y-0.5 hover:brightness-[1.05]',
 };
 
 // Objetivos táctiles cómodos: mínimo 44px de alto en `md`/`lg` (accesibilidad).

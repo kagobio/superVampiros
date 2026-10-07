@@ -1,10 +1,11 @@
 @import 'tailwindcss';
 
 /*
- * Alimentos Vampíricos — Sistema de diseño
- * Estética sobria y profesional, tipo producto: neutros disciplinados, un único
- * acento vino usado con mesura, tipografía Inter con jerarquía tensa, radios
- * moderados y sombras sutiles apoyadas en hairlines. Los colores semánticos se
+ * SuperVampiros — Sistema de diseño «Fresco vibrante»
+ * Un cambio radical respecto al look sobrio anterior: paleta jugosa y apetecible
+ * (coral→mango con acento turquesa), formas redondeadas y generosas, sombras
+ * suaves con brillo de color, tipografía de titulares con carácter (Bricolage
+ * Grotesque) y movimiento fluido y dinámico. Los colores semánticos se
  * referencian con `@theme inline` para que cambien en caliente al alternar
  * `data-theme`.
  */
@@ -13,33 +14,36 @@
 
 /* ---- Paleta cruda (no usar directamente en componentes) ---- */
 :root {
-  /* Neutros claros (gris muy leve, nada de crema) */
+  /* Neutros claros, cálidos (arena muy suave, nada de gris frío) */
   --n-0: #ffffff;
-  --n-50: #f5f4f2;
-  --n-100: #ecebe8;
-  --n-200: #e3e1dd;
-  --n-700: #6c6a70;
-  --n-900: #18171a;
+  --n-50: #fbf7f2;
+  --n-100: #f3ece3;
+  --n-200: #e8ddd0;
+  --n-700: #726a62;
+  --n-900: #1f1a16;
 
-  /* Neutros oscuros (carbón neutro) */
-  --d-bg: #101013;
-  --d-surface: #17171b;
-  --d-surface-2: #202026;
-  --d-line: #2b2b32;
-  --d-text: #ededf0;
-  --d-muted: #9896a0;
+  /* Neutros oscuros (tinta cálida con un punto ciruela) */
+  --d-bg: #141017;
+  --d-surface: #1d1823;
+  --d-surface-2: #282130;
+  --d-line: #352c3e;
+  --d-text: #f5eef2;
+  --d-muted: #a99fac;
 
-  /* Acento vino + funcionales */
-  --wine: #93202e;
-  --wine-strong: #a62434;
-  --wine-glow: #cf4051;
-  --wine-glow-hi: #dd5968;
-  --cherry: #c0283a;
-  --cherry-bright: #e05565;
-  --olive: #2c8a5e;
-  --olive-bright: #45bd86;
-  --saffron: #a96a1c;
-  --saffron-bright: #d79a45;
+  /* Acentos jugosos */
+  --coral: #ff5b2e;
+  --coral-strong: #f0410f;
+  --coral-bright: #ff7a4d;
+  --mango: #ff9f33;
+  --mango-bright: #ffb65c;
+  --teal: #10b6a4;
+  --teal-bright: #2fd7c3;
+  --grass: #27b268;
+  --grass-bright: #46d98a;
+  --amber: #e79a15;
+  --amber-bright: #f7c04a;
+  --berry: #ef4444;
+  --berry-bright: #ff6a63;
 }
 
 /* ---- Tokens semánticos: tema claro (por defecto) ---- */
@@ -51,15 +55,24 @@
   --border: var(--n-200);
   --text: var(--n-900);
   --muted: var(--n-700);
-  --primary: var(--wine);
-  --primary-hover: var(--wine-strong);
+  --primary: var(--coral);
+  --primary-hover: var(--coral-strong);
   --primary-fg: #ffffff;
-  --accent: var(--wine-strong);
-  --danger: var(--cherry);
-  --success: var(--olive);
-  --warning: var(--saffron);
-  --ring: color-mix(in oklab, var(--wine) 40%, transparent);
-  --shadow: 0 1px 2px rgb(20 18 22 / 0.06), 0 2px 10px -5px rgb(20 18 22 / 0.12);
+  --accent: var(--teal);
+  --danger: var(--berry);
+  --success: var(--grass);
+  --warning: var(--amber);
+  --ring: color-mix(in oklab, var(--coral) 45%, transparent);
+
+  /* Degradado de marca: coral → mango. */
+  --gradient-primary: linear-gradient(135deg, var(--coral) 0%, var(--mango) 100%);
+  /* Auroras ambientales del fondo. */
+  --aurora-1: color-mix(in oklab, var(--coral) 32%, transparent);
+  --aurora-2: color-mix(in oklab, var(--teal) 28%, transparent);
+
+  --shadow: 0 1px 2px rgb(31 26 22 / 0.05), 0 8px 24px -14px rgb(31 26 22 / 0.18);
+  --shadow-lift-raw: 0 2px 6px rgb(31 26 22 / 0.07), 0 18px 40px -20px rgb(31 26 22 / 0.3);
+  --shadow-glow-raw: 0 8px 24px -8px color-mix(in oklab, var(--coral) 55%, transparent);
   color-scheme: light;
 }
 
@@ -71,22 +84,29 @@
   --border: var(--d-line);
   --text: var(--d-text);
   --muted: var(--d-muted);
-  --primary: var(--wine-glow);
-  --primary-hover: var(--wine-glow-hi);
-  --primary-fg: #ffffff;
-  --accent: #e78893;
-  --danger: var(--cherry-bright);
-  --success: var(--olive-bright);
-  --warning: var(--saffron-bright);
-  --ring: color-mix(in oklab, var(--wine-glow) 55%, transparent);
-  --shadow: 0 1px 2px rgb(0 0 0 / 0.5), 0 10px 28px -14px rgb(0 0 0 / 0.65);
+  --primary: var(--coral-bright);
+  --primary-hover: var(--coral);
+  --primary-fg: #1a0f08;
+  --accent: var(--teal-bright);
+  --danger: var(--berry-bright);
+  --success: var(--grass-bright);
+  --warning: var(--amber-bright);
+  --ring: color-mix(in oklab, var(--coral-bright) 60%, transparent);
+
+  --gradient-primary: linear-gradient(135deg, var(--coral-bright) 0%, var(--mango-bright) 100%);
+  --aurora-1: color-mix(in oklab, var(--coral-bright) 26%, transparent);
+  --aurora-2: color-mix(in oklab, var(--teal-bright) 22%, transparent);
+
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.5), 0 14px 34px -16px rgb(0 0 0 / 0.7);
+  --shadow-lift-raw: 0 2px 8px rgb(0 0 0 / 0.55), 0 24px 50px -22px rgb(0 0 0 / 0.75);
+  --shadow-glow-raw: 0 10px 30px -8px color-mix(in oklab, var(--coral-bright) 50%, transparent);
   color-scheme: dark;
 }
 
 /* ---- Exponer tokens como utilidades Tailwind ---- */
 @theme inline {
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
-  --font-display: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-display: 'Bricolage Grotesque', 'Inter', system-ui, sans-serif;
 
   --color-bg: var(--bg);
   --color-surface: var(--surface);
@@ -102,24 +122,27 @@
   --color-success: var(--success);
   --color-warning: var(--warning);
 
-  /* Radios moderados: definidos, no «burbuja». */
-  --radius-lg: 0.625rem;
-  --radius-xl: 0.75rem;
-  --radius-2xl: 1rem;
+  /* Radios generosos: formas redondeadas y amables. */
+  --radius-lg: 0.85rem;
+  --radius-xl: 1.1rem;
+  --radius-2xl: 1.5rem;
+  --radius-3xl: 2rem;
 
   --shadow-soft: var(--shadow);
+  --shadow-lift: var(--shadow-lift-raw);
+  --shadow-glow: var(--shadow-glow-raw);
 
   /*
-   * Motion (criterio Emil Kowalski): las curvas por defecto de CSS son flojas.
-   * Definimos un ease-out fuerte como curva y duración por defecto de TODAS las
-   * transiciones (`transition-*`), más curvas con nombre para casos concretos.
-   * Regla: UI por debajo de 300 ms; entrar/salir con ease-out.
+   * Motion: curvas con energía. Las curvas por defecto de CSS son flojas; aquí
+   * la curva por defecto de TODAS las transiciones es un ease-out fuerte, con
+   * curvas con nombre para casos concretos. UI por debajo de ~300 ms.
    */
-  --default-transition-duration: 180ms;
-  --default-transition-timing-function: cubic-bezier(0.23, 1, 0.32, 1);
-  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --default-transition-duration: 200ms;
+  --default-transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
   --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-back: cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 /* ---- Base ---- */
@@ -142,18 +165,18 @@
     text-rendering: optimizeLegibility;
   }
 
-  /* Jerarquía tensa y profesional: sans con peso semibold y tracking negativo. */
+  /* Titulares con carácter: display con peso alto y tracking ceñido. */
   h1,
   h2,
   h3 {
     font-family: var(--font-display);
-    font-weight: 600;
-    letter-spacing: -0.021em;
-    line-height: 1.15;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
   }
 
   h1 {
-    letter-spacing: -0.028em;
+    letter-spacing: -0.03em;
   }
 
   :focus-visible {
@@ -169,6 +192,49 @@
       animation-duration: 0.01ms !important;
       animation-iteration-count: 1 !important;
       transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+/* ---- Utilidades de marca ---- */
+@layer utilities {
+  /* Relleno con el degradado de marca (CTAs, FAB, acentos). */
+  .bg-gradient-primary {
+    background-image: var(--gradient-primary);
+  }
+
+  /* Texto con el degradado de marca (titulares destacados). */
+  .text-gradient-primary {
+    background-image: var(--gradient-primary);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* Auroras ambientales: dos manchas suaves que derivan despacio al fondo. */
+  .aurora {
+    position: fixed;
+    inset: -20% -10% auto -10%;
+    height: 60vh;
+    z-index: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(42% 55% at 18% 22%, var(--aurora-1) 0%, transparent 70%),
+      radial-gradient(40% 50% at 82% 12%, var(--aurora-2) 0%, transparent 70%);
+    filter: blur(28px);
+    opacity: 0.9;
+    animation: aurora-drift 22s ease-in-out infinite alternate;
+  }
+
+  @keyframes aurora-drift {
+    0% {
+      transform: translate3d(-3%, -2%, 0) scale(1);
+    }
+    50% {
+      transform: translate3d(4%, 3%, 0) scale(1.08);
+    }
+    100% {
+      transform: translate3d(-2%, 4%, 0) scale(1.03);
     }
   }
 }

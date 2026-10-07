@@ -18,7 +18,9 @@ export function AppShell() {
   }, [location.pathname]);
 
   return (
-    <div className="flex min-h-dvh flex-col bg-bg text-text">
+    <div className="relative flex min-h-dvh flex-col bg-bg text-text">
+      {/* Aurora ambiental: dos manchas de color que derivan despacio al fondo. */}
+      <div className="aurora" aria-hidden="true" />
       <a
         href="#contenido"
         className="sr-only focus:not-sr-only focus:absolute focus:left-3 focus:top-3 focus:z-50 focus:rounded-lg focus:bg-primary focus:px-3 focus:py-2 focus:text-primary-fg"
@@ -30,15 +32,19 @@ export function AppShell() {
         id="contenido"
         ref={mainRef}
         tabIndex={-1}
-        className="mx-auto w-full max-w-2xl flex-1 px-4 py-4 outline-none"
+        className="relative z-10 mx-auto w-full max-w-2xl flex-1 px-4 py-4 outline-none"
       >
         <AnimatePresence mode="wait">
           <motion.div
             key={location.pathname}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: reduce ? 0 : 0.15 }}
+            initial={reduce ? false : { opacity: 0, y: 12, scale: 0.985 }}
+            animate={reduce ? { opacity: 1 } : { opacity: 1, y: 0, scale: 1 }}
+            exit={reduce ? { opacity: 0 } : { opacity: 0, y: -8, scale: 0.99 }}
+            transition={
+              reduce
+                ? { duration: 0 }
+                : { type: 'spring', stiffness: 420, damping: 36, mass: 0.7 }
+            }
           >
             <Outlet />
           </motion.div>
