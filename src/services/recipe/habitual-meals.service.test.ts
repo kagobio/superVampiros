@@ -32,12 +32,22 @@ function recipe(name: string): Recipe {
 }
 
 describe('buildHabitualRecipeInput', () => {
-  it('enlaza los ingredientes que existen en el inventario y marca favorita', () => {
-    const meal = { name: 'Prueba', ingredients: ['Arroz', 'Marciano'], steps: ['Paso 1'] };
+  it('enlaza los ingredientes que existen en el inventario, con su cantidad, y marca favorita', () => {
+    const meal = {
+      name: 'Prueba',
+      servings: 2,
+      ingredients: [
+        { name: 'Arroz', quantity: 3 },
+        { name: 'Marciano', quantity: 1 },
+      ],
+      steps: ['Paso 1'],
+    };
     const input = buildHabitualRecipeInput(meal, [product('p-arroz', 'Arroz')]);
     expect(input.favorite).toBe(true);
+    expect(input.servings).toBe(2);
     expect(input.ingredients).toHaveLength(1);
     expect(input.ingredients?.[0]?.productId).toBe('p-arroz');
+    expect(input.ingredients?.[0]?.quantity).toBe(3); // conserva la cantidad del config
     expect(input.description).toContain('Paso 1');
     expect(input.description).toContain('Marciano'); // anotado como faltante
   });

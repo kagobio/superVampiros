@@ -10,6 +10,7 @@ import {
   Sun,
   Trash2,
   UtensilsCrossed,
+  Wallet,
   X,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
@@ -33,6 +34,7 @@ import { Button } from '@/components/ui/Button';
 import { IconButton } from '@/components/ui/IconButton';
 import { Field } from '@/components/ui/Field';
 import { Input } from '@/components/ui/Input';
+import { formatEur } from '@/lib/money';
 import { useUnits } from '@/hooks/useTaxonomies';
 import { useProducts } from '@/features/inventory/hooks/useProducts';
 import { useRecipes } from '@/features/recipes/hooks/useRecipes';
@@ -166,12 +168,33 @@ export function MealPlanEditorSheet({ open, onClose, plan }: MealPlanEditorSheet
           unit: i.unitId ? (unitById.get(i.unitId) ?? '') : '',
           categoryId: product?.categoryId ?? null,
           exists: Boolean(product),
+          price: product?.price ?? null,
         };
       })
       .sort((a, b) => a.name.localeCompare(b.name, 'es', { sensitivity: 'base' }));
   }, [assignments, name, plan?.id, recipesById, productById, unitById]);
 
   const missingRows = rows.filter((r) => r.exists && r.missing > 0);
+
+  // Coste estimado del menú: suma de (cantidad necesaria × precio) de los
+  // productos con precio conocido. `unknown` cuenta los que no tienen precio,
+  // para avisar de que el total es parcial. `missingTotal` es lo que costaría
+  // solo lo que falta comprar.
+  const cost = useMemo(() => {
+    let total = 0;
+    let missingTotal = 0;
+    let unknown = 0;
+    for (const r of rows) {
+      if (!r.exists) continue;
+      if (r.price == null) {
+        unknown += 1;
+        continue;
+      }
+      total += r.price * r.needed;
+      missingTotal += r.price * r.missing;
+    }
+    return { total, missingTotal, unknown, hasPriced: total > 0 || missingTotal > 0 };
+  }, [rows]);
 
   const handleSave = async () => {
     const finalName = name.trim() || 'Mi semana';
@@ -187,6 +210,17 @@ export function MealPlanEditorSheet({ open, onClose, plan }: MealPlanEditorSheet
       await mealPlanService.remove(plan.id);
       onClose();
     }
+  };
+
+  // Repetir una semana: crea un menú nuevo con las mismas comidas (el estado
+  // actual del editor, incluidos los cambios sin guardar), para reutilizar una
+  // semana sin rehacerla desde cero.
+  const handleDuplicate = async () => {
+    const baseName = name.trim() || 'Mi semana';
+    const entries = mapToEntries(new Map(Object.entries(assignments)));
+    await mealPlanService.create({ name: `${baseName} (copia)`, entries });
+    toast('Semana duplicada', 'success');
+    onClose();
   };
 
   const copyIngredients = async () => {
@@ -229,14 +263,24 @@ export function MealPlanEditorSheet({ open, onClose, plan }: MealPlanEditorSheet
       footer={
         <div className="flex items-center gap-2">
           {isEdit ? (
-            <Button
-              variant="ghost"
-              onClick={handleDelete}
-              className="shrink-0 text-danger"
-              aria-label="Eliminar menú"
-            >
-              <Trash2 size={18} aria-hidden="true" />
-            </Button>
+            <>
+              <Button
+                variant="ghost"
+                onClick={handleDelete}
+                className="shrink-0 text-danger"
+                aria-label="Eliminar menú"
+              >
+                <Trash2 size={18} aria-hidden="true" />
+              </Button>
+              <Button
+                variant="ghost"
+                onClick={handleDuplicate}
+                className="shrink-0"
+                aria-label="Duplicar menú (repetir esta semana)"
+              >
+                <Copy size={18} aria-hidden="true" />
+              </Button>
+            </>
           ) : null}
           <Button onClick={handleSave} className="flex-1 justify-center">
             <Check size={18} aria-hidden="true" />
@@ -387,6 +431,29 @@ export function MealPlanEditorSheet({ open, onClose, plan }: MealPlanEditorSheet
                   </li>
                 ))}
               </ul>
+              {cost.hasPriced ? (
+                <div className="mt-2 flex items-center justify-between gap-3 rounded-xl border border-border bg-surface-2/40 px-3 py-2.5 text-sm">
+                  <span className="flex items-center gap-1.5 text-muted">
+                    <Wallet size={15} className="text-primary" aria-hidden="true" />
+                    Coste estimado
+                    {cost.unknown > 0 ? (
+                      <span className="text-xs text-muted/70">
+                        · {cost.unknown} sin precio
+                      </span>
+                    ) : null}
+                  </span>
+                  <span className="shrink-0 text-right">
+                    <span className="block font-semibold tabular-nums text-text">
+                      {formatEur(cost.total)}
+                    </span>
+                    {cost.missingTotal > 0 ? (
+                      <span className="block text-xs text-muted tabular-nums">
+                        {formatEur(cost.missingTotal)} lo que falta
+                      </span>
+                    ) : null}
+                  </span>
+                </div>
+              ) : null}
               {missingRows.length > 0 ? (
                 <Button
                   variant="secondary"

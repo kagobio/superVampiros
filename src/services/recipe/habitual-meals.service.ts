@@ -22,7 +22,7 @@ export function buildHabitualRecipeInput(meal: HabitualMeal, products: Product[]
   ]
     .filter(Boolean)
     .join('\n\n');
-  return { name: meal.name, description, ingredients, favorite: true };
+  return { name: meal.name, description, servings: meal.servings, ingredients, favorite: true };
 }
 
 /**
