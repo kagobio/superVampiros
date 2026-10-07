@@ -1,5 +1,18 @@
 import { useMemo, useState } from 'react';
-import { Check, Copy, Moon, ShoppingCart, Star, Sun, Trash2, UtensilsCrossed, X } from 'lucide-react';
+import {
+  Check,
+  ChevronDown,
+  Copy,
+  Moon,
+  Plus,
+  ShoppingCart,
+  Star,
+  Sun,
+  Trash2,
+  UtensilsCrossed,
+  X,
+} from 'lucide-react';
+import { cn } from '@/lib/cn';
 import type { MealPlan, MealSlot } from '@/domain/meal-plan/meal-plan.types';
 import {
   MEAL_SLOTS,
@@ -20,7 +33,6 @@ import { Button } from '@/components/ui/Button';
 import { IconButton } from '@/components/ui/IconButton';
 import { Field } from '@/components/ui/Field';
 import { Input } from '@/components/ui/Input';
-import { Select } from '@/components/ui/Select';
 import { useUnits } from '@/hooks/useTaxonomies';
 import { useProducts } from '@/features/inventory/hooks/useProducts';
 import { useRecipes } from '@/features/recipes/hooks/useRecipes';
@@ -47,6 +59,8 @@ export function MealPlanEditorSheet({ open, onClose, plan }: MealPlanEditorSheet
   const [assignments, setAssignments] = useState<Record<string, string>>(() =>
     Object.fromEntries(entriesToMap(plan?.entries ?? [])),
   );
+  // Hueco con el selector abierto (solo uno a la vez), por `slotKey`.
+  const [openSlot, setOpenSlot] = useState<string | null>(null);
 
   const isEdit = plan !== null;
 
@@ -245,34 +259,42 @@ export function MealPlanEditorSheet({ open, onClose, plan }: MealPlanEditorSheet
             <span className="text-xs text-muted">Elige receta o escribe un plato</span>
           </div>
           {favoriteRecipes.length > 0 ? (
-            <Button variant="secondary" className="mb-2 w-full" onClick={fillWithFavorites}>
+            <Button variant="secondary" className="mb-2.5 w-full" onClick={fillWithFavorites}>
               <Star size={16} aria-hidden="true" />
               Rellenar huecos con comidas habituales
             </Button>
           ) : null}
-          <div className="overflow-hidden rounded-2xl border border-border bg-surface shadow-soft">
-            <div className="grid grid-cols-[2.75rem_1fr_1fr] gap-1.5 border-b border-border bg-surface-2/60 px-2.5 py-2 text-[0.7rem] font-semibold uppercase tracking-wide text-muted">
-              <span />
-              <span className="flex items-center justify-center gap-1">
-                <Sun size={12} aria-hidden="true" /> Comida
-              </span>
-              <span className="flex items-center justify-center gap-1">
-                <Moon size={12} aria-hidden="true" /> Cena
-              </span>
-            </div>
-            <div className="divide-y divide-border">
-              {WEEK_DAYS.map((dayLabel, day) => (
-                <DayRow
-                  key={dayLabel}
-                  dayLabel={dayLabel}
-                  day={day}
-                  assignments={assignments}
-                  recipes={recipes}
-                  onChange={setSlot}
-                  onCreateDish={createDish}
-                />
-              ))}
-            </div>
+          <div className="space-y-2">
+            {WEEK_DAYS.map((dayLabel, day) => (
+              <div
+                key={dayLabel}
+                className="overflow-hidden rounded-2xl border border-border bg-surface shadow-soft"
+              >
+                <p className="border-b border-border bg-surface-2/50 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-muted">
+                  {dayLabel}
+                </p>
+                <div className="divide-y divide-border">
+                  {MEAL_SLOTS.map(({ slot, label }) => {
+                    const key = slotKey(day, slot);
+                    return (
+                      <SlotPicker
+                        key={slot}
+                        day={day}
+                        slot={slot}
+                        label={label}
+                        dayLabel={dayLabel}
+                        value={assignments[key] ?? ''}
+                        recipes={recipes}
+                        open={openSlot === key}
+                        onOpenChange={(o) => setOpenSlot(o ? key : null)}
+                        onChange={setSlot}
+                        onCreateDish={createDish}
+                      />
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
           </div>
         </div>
         {/* Ingredientes necesarios */}
@@ -352,41 +374,6 @@ interface SlotRecipe {
   favorite?: boolean;
 }
 
-interface DayRowProps {
-  dayLabel: string;
-  day: number;
-  assignments: Record<string, string>;
-  recipes: SlotRecipe[];
-  onChange: (day: number, slot: MealSlot, recipeId: string) => void;
-  onCreateDish: (day: number, slot: MealSlot, name: string) => void | Promise<void>;
-}
-
-function DayRow({ dayLabel, day, assignments, recipes, onChange, onCreateDish }: DayRowProps) {
-  return (
-    <div className="grid grid-cols-[2.75rem_1fr_1fr] items-center gap-1.5 px-2.5 py-2">
-      <span className="text-xs font-semibold capitalize text-muted" title={dayLabel}>
-        {dayLabel.slice(0, 3)}
-      </span>
-      {MEAL_SLOTS.map(({ slot, label }) => (
-        <SlotPicker
-          key={slot}
-          day={day}
-          slot={slot}
-          label={label}
-          dayLabel={dayLabel}
-          value={assignments[slotKey(day, slot)] ?? ''}
-          recipes={recipes}
-          onChange={onChange}
-          onCreateDish={onCreateDish}
-        />
-      ))}
-    </div>
-  );
-}
-
-/** Opción centinela del select para «escribir un plato nuevo». */
-const NEW_DISH = '__new_dish__';
-
 interface SlotPickerProps {
   day: number;
   slot: MealSlot;
@@ -394,14 +381,17 @@ interface SlotPickerProps {
   dayLabel: string;
   value: string;
   recipes: SlotRecipe[];
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
   onChange: (day: number, slot: MealSlot, recipeId: string) => void;
   onCreateDish: (day: number, slot: MealSlot, name: string) => void | Promise<void>;
 }
 
 /**
- * Hueco del menú: elige una receta existente o escribe un plato nuevo a mano.
- * Al elegir «Nuevo plato…» se cambia a un campo de texto; al confirmar, el
- * padre crea la receta mínima y la asigna.
+ * Hueco del menú (comida o cena de un día). Botón de ancho completo que muestra
+ * el plato con el texto completo (se ajusta en varias líneas, no se corta) y, al
+ * tocarlo, despliega la lista de recetas —favoritas arriba— o la opción de
+ * escribir un plato nuevo a mano. Solo un hueco está abierto a la vez.
  */
 function SlotPicker({
   day,
@@ -410,6 +400,8 @@ function SlotPicker({
   dayLabel,
   value,
   recipes,
+  open,
+  onOpenChange,
   onChange,
   onCreateDish,
 }: SlotPickerProps) {
@@ -418,88 +410,189 @@ function SlotPicker({
   const filled = Boolean(value);
   const favorites = recipes.filter((r) => r.favorite);
   const others = recipes.filter((r) => !r.favorite);
-  // Si el valor aún no está en la lista (receta recién creada), lo mostramos
-  // igualmente para que el select no quede en blanco mientras se refresca.
-  const known = !value || recipes.some((r) => r.id === value);
+  const selected = recipes.find((r) => r.id === value);
+  const SlotIcon = slot === 'dinner' ? Moon : Sun;
 
-  const cancel = () => {
+  const close = () => {
+    onOpenChange(false);
     setAdding(false);
     setDraft('');
+  };
+
+  const choose = (recipeId: string) => {
+    onChange(day, slot, recipeId);
+    close();
   };
 
   const confirm = async () => {
     const name = draft.trim();
     if (!name) {
-      cancel();
+      setAdding(false);
+      setDraft('');
       return;
     }
     await onCreateDish(day, slot, name);
-    cancel();
+    close();
   };
 
-  if (adding) {
-    return (
-      <div className="flex items-center gap-1">
-        <input
-          autoFocus
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') {
-              e.preventDefault();
-              void confirm();
-            } else if (e.key === 'Escape') {
-              cancel();
-            }
-          }}
-          placeholder={`${label}…`}
-          aria-label={`Nuevo plato para ${label.toLowerCase()} del ${dayLabel}`}
-          className="h-11 min-w-0 flex-1 rounded-xl border border-primary/50 bg-surface px-2.5 text-sm text-text outline-none placeholder:text-muted focus-visible:ring-2 focus-visible:ring-[color:var(--ring)]"
-        />
-        <IconButton
-          icon={Check}
-          label="Guardar plato"
-          size="sm"
-          variant="solid"
-          onClick={() => void confirm()}
-        />
-        <IconButton icon={X} label="Cancelar" size="sm" variant="ghost" onClick={cancel} />
-      </div>
-    );
-  }
-
   return (
-    <Select
-      aria-label={`${label} del ${dayLabel}`}
-      value={value}
-      onChange={(e) => {
-        const v = e.target.value;
-        if (v === NEW_DISH) setAdding(true);
-        else onChange(day, slot, v);
-      }}
-      className={filled ? 'border-primary/40 font-medium text-text' : 'text-muted'}
+    <div>
+      <button
+        type="button"
+        onClick={() => onOpenChange(!open)}
+        aria-expanded={open}
+        aria-label={`${label} del ${dayLabel}`}
+        className="flex w-full items-start gap-2.5 px-3 py-2.5 text-left transition-colors hover:bg-surface-2/40"
+      >
+        <span
+          className={cn(
+            'mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg',
+            filled ? 'bg-primary/10 text-primary' : 'bg-surface-2 text-muted',
+          )}
+        >
+          <SlotIcon size={14} aria-hidden="true" />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-[0.7rem] font-semibold uppercase tracking-wide text-muted">
+            {label}
+          </span>
+          <span
+            className={cn(
+              'block text-sm',
+              filled ? 'font-medium text-text' : 'text-muted',
+            )}
+          >
+            {selected ? selected.name : filled ? 'Plato nuevo…' : 'Elegir plato'}
+          </span>
+        </span>
+        <ChevronDown
+          size={16}
+          aria-hidden="true"
+          className={cn('mt-1 shrink-0 text-muted transition-transform', open && 'rotate-180')}
+        />
+      </button>
+
+      {open ? (
+        <div className="border-t border-border bg-surface-2/30 px-2 pb-2 pt-1.5">
+          {adding ? (
+            <div className="flex items-center gap-1 p-1">
+              <input
+                autoFocus
+                value={draft}
+                onChange={(e) => setDraft(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    void confirm();
+                  } else if (e.key === 'Escape') {
+                    setAdding(false);
+                    setDraft('');
+                  }
+                }}
+                placeholder="Nombre del plato…"
+                aria-label={`Nuevo plato para ${label.toLowerCase()} del ${dayLabel}`}
+                className="h-11 min-w-0 flex-1 rounded-xl border border-primary/50 bg-surface px-2.5 text-sm text-text outline-none placeholder:text-muted focus-visible:ring-2 focus-visible:ring-[color:var(--ring)]"
+              />
+              <IconButton
+                icon={Check}
+                label="Guardar plato"
+                size="sm"
+                variant="solid"
+                onClick={() => void confirm()}
+              />
+              <IconButton
+                icon={X}
+                label="Cancelar"
+                size="sm"
+                variant="ghost"
+                onClick={() => {
+                  setAdding(false);
+                  setDraft('');
+                }}
+              />
+            </div>
+          ) : (
+            <div className="space-y-0.5">
+              {favorites.length > 0 ? (
+                <>
+                  <p className="px-2 pb-0.5 pt-1 text-[0.7rem] font-semibold uppercase tracking-wide text-muted">
+                    ⭐ Comidas habituales
+                  </p>
+                  {favorites.map((r) => (
+                    <OptionButton
+                      key={r.id}
+                      name={r.name}
+                      selected={r.id === value}
+                      onClick={() => choose(r.id)}
+                    />
+                  ))}
+                </>
+              ) : null}
+              {others.length > 0 ? (
+                <>
+                  <p className="px-2 pb-0.5 pt-1.5 text-[0.7rem] font-semibold uppercase tracking-wide text-muted">
+                    {favorites.length > 0 ? 'Otras recetas' : 'Recetas'}
+                  </p>
+                  {others.map((r) => (
+                    <OptionButton
+                      key={r.id}
+                      name={r.name}
+                      selected={r.id === value}
+                      onClick={() => choose(r.id)}
+                    />
+                  ))}
+                </>
+              ) : null}
+              <button
+                type="button"
+                onClick={() => setAdding(true)}
+                className="mt-1 flex w-full items-center gap-2 rounded-xl px-2.5 py-2 text-left text-sm font-medium text-primary transition-colors hover:bg-primary/10"
+              >
+                <Plus size={15} aria-hidden="true" />
+                Nuevo plato…
+              </button>
+              {filled ? (
+                <button
+                  type="button"
+                  onClick={() => choose('')}
+                  className="flex w-full items-center gap-2 rounded-xl px-2.5 py-2 text-left text-sm text-danger transition-colors hover:bg-danger/10"
+                >
+                  <X size={15} aria-hidden="true" />
+                  Quitar plato
+                </button>
+              ) : null}
+            </div>
+          )}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+interface OptionButtonProps {
+  name: string;
+  selected: boolean;
+  onClick: () => void;
+}
+
+/** Opción de receta dentro del desplegable del hueco (el texto se ajusta, no se corta). */
+function OptionButton({ name, selected, onClick }: OptionButtonProps) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={selected}
+      className={cn(
+        'flex w-full items-start gap-2 rounded-xl px-2.5 py-2 text-left text-sm transition-colors hover:bg-surface-2',
+        selected ? 'bg-primary/10 font-medium text-text' : 'text-text',
+      )}
     >
-      <option value="">—</option>
-      {!known ? <option value={value}>Plato nuevo…</option> : null}
-      {favorites.length > 0 ? (
-        <optgroup label="⭐ Comidas habituales">
-          {favorites.map((r) => (
-            <option key={r.id} value={r.id}>
-              {r.name}
-            </option>
-          ))}
-        </optgroup>
-      ) : null}
-      {others.length > 0 ? (
-        <optgroup label={favorites.length > 0 ? 'Otras recetas' : 'Recetas'}>
-          {others.map((r) => (
-            <option key={r.id} value={r.id}>
-              {r.name}
-            </option>
-          ))}
-        </optgroup>
-      ) : null}
-      <option value={NEW_DISH}>➕ Nuevo plato…</option>
-    </Select>
+      <Check
+        size={15}
+        aria-hidden="true"
+        className={cn('mt-0.5 shrink-0', selected ? 'text-primary' : 'text-transparent')}
+      />
+      <span className="min-w-0 flex-1">{name}</span>
+    </button>
   );
 }
