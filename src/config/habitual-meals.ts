@@ -5,28 +5,39 @@
  *
  * Cada una se guarda como receta: los ingredientes se emparejan con el
  * inventario (los que existan quedan enlazados para la lista de la compra) y los
- * pasos / ingredientes que falten se anotan en las notas. Las cantidades no se
- * especifican aquí (cada ingrediente cuenta como 1); el usuario puede afinarlas
- * luego desde Recetas.
+ * pasos / ingredientes que falten se anotan en las notas. Cada ingrediente lleva
+ * su cantidad (en la unidad del producto del inventario con el que se empareja),
+ * pensada para las raciones indicadas en `servings`. Así la lista de la compra
+ * sale ajustada en vez de "1 de cada"; el usuario puede afinarla luego desde
+ * Recetas.
  */
+export interface HabitualMealIngredient {
+  name: string;
+  /** Cantidad para las raciones de la comida (en la unidad del producto). */
+  quantity: number;
+}
+
 export interface HabitualMeal {
   name: string;
-  ingredients: string[];
+  /** Raciones para las que están pensadas las cantidades. */
+  servings: number;
+  ingredients: HabitualMealIngredient[];
   steps: string[];
 }
 
 export const HABITUAL_MEALS: HabitualMeal[] = [
   {
     name: 'Poke',
+    servings: 2,
     ingredients: [
-      'Arroz',
-      'Salmón',
-      'Aguacate',
-      'Edamame',
-      'Pepino',
-      'Zanahoria',
-      'Salsa de soja',
-      'Sésamo',
+      { name: 'Arroz', quantity: 2 },
+      { name: 'Salmón', quantity: 2 },
+      { name: 'Aguacate', quantity: 1 },
+      { name: 'Edamame', quantity: 1 },
+      { name: 'Pepino', quantity: 1 },
+      { name: 'Zanahoria', quantity: 1 },
+      { name: 'Salsa de soja', quantity: 1 },
+      { name: 'Sésamo', quantity: 1 },
     ],
     steps: [
       'Cuece el arroz y déjalo templar.',
@@ -36,7 +47,13 @@ export const HABITUAL_MEALS: HabitualMeal[] = [
   },
   {
     name: 'Arroz con carne picada, cottage y aguacate',
-    ingredients: ['Arroz', 'Carne picada', 'Queso cottage', 'Aguacate'],
+    servings: 2,
+    ingredients: [
+      { name: 'Arroz', quantity: 2 },
+      { name: 'Carne picada', quantity: 1 },
+      { name: 'Queso cottage', quantity: 1 },
+      { name: 'Aguacate', quantity: 1 },
+    ],
     steps: [
       'Cuece el arroz.',
       'Saltea la carne picada hasta dorarla.',
@@ -45,7 +62,16 @@ export const HABITUAL_MEALS: HabitualMeal[] = [
   },
   {
     name: 'Lentejas',
-    ingredients: ['Lentejas', 'Cebolla', 'Zanahoria', 'Pimiento', 'Chorizo', 'Ajo', 'Laurel'],
+    servings: 4,
+    ingredients: [
+      { name: 'Lentejas', quantity: 2 },
+      { name: 'Cebolla', quantity: 1 },
+      { name: 'Zanahoria', quantity: 2 },
+      { name: 'Pimiento', quantity: 1 },
+      { name: 'Chorizo', quantity: 1 },
+      { name: 'Ajo', quantity: 2 },
+      { name: 'Laurel', quantity: 1 },
+    ],
     steps: [
       'Pocha la cebolla, el ajo, el pimiento y la zanahoria.',
       'Añade las lentejas, el chorizo y el laurel y cubre con agua.',
@@ -54,7 +80,14 @@ export const HABITUAL_MEALS: HabitualMeal[] = [
   },
   {
     name: 'Carne con verduras y patatas',
-    ingredients: ['Carne', 'Patatas', 'Verduras variadas', 'Cebolla', 'Ajo'],
+    servings: 2,
+    ingredients: [
+      { name: 'Carne', quantity: 2 },
+      { name: 'Patatas', quantity: 3 },
+      { name: 'Verduras variadas', quantity: 2 },
+      { name: 'Cebolla', quantity: 1 },
+      { name: 'Ajo', quantity: 2 },
+    ],
     steps: [
       'Dora la carne con la cebolla y el ajo.',
       'Añade las verduras y las patatas en trozos.',
@@ -63,7 +96,14 @@ export const HABITUAL_MEALS: HabitualMeal[] = [
   },
   {
     name: 'Pasta con cosas',
-    ingredients: ['Pasta', 'Tomate', 'Cebolla', 'Ajo', 'Queso'],
+    servings: 2,
+    ingredients: [
+      { name: 'Pasta', quantity: 2 },
+      { name: 'Tomate', quantity: 2 },
+      { name: 'Cebolla', quantity: 1 },
+      { name: 'Ajo', quantity: 2 },
+      { name: 'Queso', quantity: 1 },
+    ],
     steps: [
       'Cuece la pasta al dente.',
       'Prepara una salsa con lo que tengas (tomate, verduras, carne…).',
@@ -72,7 +112,16 @@ export const HABITUAL_MEALS: HabitualMeal[] = [
   },
   {
     name: 'Ensalada David',
-    ingredients: ['Lechuga', 'Tomate', 'Atún', 'Huevo', 'Maíz', 'Aceitunas', 'Cebolla'],
+    servings: 2,
+    ingredients: [
+      { name: 'Lechuga', quantity: 1 },
+      { name: 'Tomate', quantity: 2 },
+      { name: 'Atún', quantity: 2 },
+      { name: 'Huevo', quantity: 2 },
+      { name: 'Maíz', quantity: 1 },
+      { name: 'Aceitunas', quantity: 1 },
+      { name: 'Cebolla', quantity: 1 },
+    ],
     steps: [
       'Trocea la lechuga, el tomate y la cebolla.',
       'Añade el atún, el huevo cocido, el maíz y las aceitunas.',
@@ -81,7 +130,15 @@ export const HABITUAL_MEALS: HabitualMeal[] = [
   },
   {
     name: 'Berenjenas rellenas',
-    ingredients: ['Berenjena', 'Carne picada', 'Cebolla', 'Tomate', 'Queso rallado', 'Ajo'],
+    servings: 2,
+    ingredients: [
+      { name: 'Berenjena', quantity: 2 },
+      { name: 'Carne picada', quantity: 1 },
+      { name: 'Cebolla', quantity: 1 },
+      { name: 'Tomate', quantity: 1 },
+      { name: 'Queso rallado', quantity: 1 },
+      { name: 'Ajo', quantity: 2 },
+    ],
     steps: [
       'Hornea las berenjenas y vacía la pulpa.',
       'Saltea la carne con cebolla, ajo, tomate y la pulpa.',
@@ -90,13 +147,14 @@ export const HABITUAL_MEALS: HabitualMeal[] = [
   },
   {
     name: 'Hamburguesa con patatas fritas',
+    servings: 2,
     ingredients: [
-      'Pan de hamburguesa',
-      'Carne de hamburguesa',
-      'Queso',
-      'Lechuga',
-      'Tomate',
-      'Patatas',
+      { name: 'Pan de hamburguesa', quantity: 2 },
+      { name: 'Carne de hamburguesa', quantity: 2 },
+      { name: 'Queso', quantity: 2 },
+      { name: 'Lechuga', quantity: 1 },
+      { name: 'Tomate', quantity: 1 },
+      { name: 'Patatas', quantity: 3 },
     ],
     steps: [
       'Haz la carne a la plancha y funde el queso encima.',

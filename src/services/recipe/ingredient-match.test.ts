@@ -37,6 +37,25 @@ describe('matchIngredientsToProducts', () => {
     expect(missing).toEqual(['azafrán']);
   });
 
+  it('respeta la cantidad cuando el ingrediente la trae', () => {
+    const { ingredients } = matchIngredientsToProducts(
+      [
+        { name: 'arroz', quantity: 3 },
+        { name: 'pollo', quantity: 2 },
+      ],
+      products,
+    );
+    expect(ingredients).toEqual([
+      { productId: 'p1', quantity: 3, unitId: null },
+      { productId: 'p2', quantity: 2, unitId: 'kg' },
+    ]);
+  });
+
+  it('usa cantidad 1 cuando el ingrediente es solo un nombre', () => {
+    const { ingredients } = matchIngredientsToProducts(['arroz'], products);
+    expect(ingredients[0]).toMatchObject({ productId: 'p1', quantity: 1 });
+  });
+
   it('no duplica un producto que aparece varias veces', () => {
     const { ingredients } = matchIngredientsToProducts(['arroz', 'Arroz'], products);
     expect(ingredients).toHaveLength(1);
