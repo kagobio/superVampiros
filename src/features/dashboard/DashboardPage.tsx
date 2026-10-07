@@ -5,22 +5,28 @@ import {
   Boxes,
   CalendarX2,
   Clock,
+  Moon,
   PackageOpen,
   PackageX,
   ShoppingCart,
   Sparkles,
   Star,
+  Sun,
+  UtensilsCrossed,
   ChevronRight,
 } from 'lucide-react';
 import type { Product } from '@/domain/product/product.types';
 import { computeStats } from '@/domain/inventory/inventory-stats';
 import type { InventoryFilters } from '@/domain/inventory/inventory-view';
+import { WEEK_DAYS } from '@/domain/meal-plan/meal-plan.rules';
 import { Stat } from '@/components/ui/Stat';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Button } from '@/components/ui/Button';
 import { useFiltersStore } from '@/stores/filters.store';
 import { useSettings } from '@/hooks/useSettings';
 import { useProducts } from '@/features/inventory/hooks/useProducts';
+import { useRecipes } from '@/features/recipes/hooks/useRecipes';
+import { useMealPlans } from '@/features/meal-plans/hooks/useMealPlans';
 
 export function DashboardPage() {
   const products = useProducts();
@@ -30,6 +36,9 @@ export function DashboardPage() {
   const reduce = useReducedMotion();
   const [now] = useState(() => Date.now());
 
+  const recipes = useRecipes();
+  const plans = useMealPlans();
+
   const stats = useMemo(
     () => computeStats(products, now, settings.expirySoonDays),
     [products, now, settings.expirySoonDays],
@@ -38,6 +47,81 @@ export function DashboardPage() {
   const recent = useMemo(
     () => [...products].sort((a, b) => b.createdAt - a.createdAt).slice(0, 5),
     [products],
+  );
+
+  // «Lo que toca comer hoy»: se toma el menú más reciente (el que el usuario
+  // llama «mi semana») y sus huecos de hoy. Día app: 0 = Lunes … 6 = Domingo;
+  // JS getDay(): 0 = Domingo, por eso (getDay + 6) % 7.
+  const todayIndex = (new Date(now).getDay() + 6) % 7;
+  const recipeNameById = useMemo(
+    () => new Map(recipes.map((r) => [r.id, r.name])),
+    [recipes],
+  );
+  const activePlan = useMemo(() => {
+    if (plans.length === 0) return null;
+    return [...plans].sort(
+      (a, b) => (b.updatedAt || b.createdAt) - (a.updatedAt || a.createdAt),
+    )[0];
+  }, [plans]);
+  const todayMeals = useMemo(() => {
+    if (!activePlan) return null;
+    const nameFor = (slot: 'lunch' | 'dinner') => {
+      const entry = activePlan.entries.find((e) => e.day === todayIndex && e.slot === slot);
+      return entry ? (recipeNameById.get(entry.recipeId) ?? null) : null;
+    };
+    return { lunch: nameFor('lunch'), dinner: nameFor('dinner') };
+  }, [activePlan, todayIndex, recipeNameById]);
+
+  const openActivePlan = () => {
+    if (activePlan) navigate('/recetas/menus', { state: { openPlanId: activePlan.id } });
+    else navigate('/recetas/menus');
+  };
+
+  // Tarjeta «Hoy» del inicio: comida y cena de hoy, o una invitación a
+  // planificar si aún no hay menú. Al tocarla, lleva a «mi semana».
+  const todayCard = (
+    <button
+      type="button"
+      onClick={openActivePlan}
+      className="group flex w-full items-center gap-3 rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/10 to-primary/[0.04] p-3.5 text-left shadow-soft transition-[transform,background-color,border-color] hover:border-primary/40 active:scale-[0.99] motion-reduce:active:scale-100"
+    >
+      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-fg shadow-glow">
+        <UtensilsCrossed size={20} aria-hidden="true" />
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="flex items-baseline gap-1.5">
+          <span className="font-display text-base font-bold text-text">Hoy</span>
+          <span className="text-xs font-medium uppercase tracking-wide text-muted">
+            {WEEK_DAYS[todayIndex]}
+          </span>
+        </span>
+        {todayMeals ? (
+          <span className="mt-1 flex flex-col gap-0.5">
+            <span className="flex items-center gap-1.5 text-sm">
+              <Sun size={13} aria-hidden="true" className="shrink-0 text-muted" />
+              <span className="min-w-0 flex-1 truncate text-text">
+                {todayMeals.lunch ?? <span className="text-muted">Sin planificar</span>}
+              </span>
+            </span>
+            <span className="flex items-center gap-1.5 text-sm">
+              <Moon size={13} aria-hidden="true" className="shrink-0 text-muted" />
+              <span className="min-w-0 flex-1 truncate text-text">
+                {todayMeals.dinner ?? <span className="text-muted">Sin planificar</span>}
+              </span>
+            </span>
+          </span>
+        ) : (
+          <span className="mt-0.5 block text-xs text-muted">
+            Planifica tu semana y aquí verás qué toca comer.
+          </span>
+        )}
+      </span>
+      <ChevronRight
+        size={18}
+        aria-hidden="true"
+        className="shrink-0 text-primary transition-transform group-hover:translate-x-0.5"
+      />
+    </button>
   );
 
   /** Aplica un preset de filtros y salta al inventario. */
@@ -59,6 +143,7 @@ export function DashboardPage() {
           description="Añade productos en el inventario y aquí verás el resumen de un vistazo."
           action={<Button onClick={() => navigate('/inventario')}>Ir al inventario</Button>}
         />
+        {activePlan ? todayCard : null}
       </div>
     );
   }
@@ -112,6 +197,8 @@ export function DashboardPage() {
           {stats.total} {stats.total === 1 ? 'producto' : 'productos'} en tu despensa.
         </p>
       </header>
+
+      {todayCard}
 
       <motion.section
         aria-label="Resumen"
