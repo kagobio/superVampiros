@@ -55,7 +55,10 @@ export function MealPlanEditorSheet({ open, onClose, plan }: MealPlanEditorSheet
   const unitById = useMemo(() => new Map(units.map((u) => [u.id, u.abbreviation])), [units]);
 
   // El padre remonta este componente (vía `key`) en cada apertura.
-  const [name, setName] = useState(plan?.name ?? '');
+  // Nombre por defecto al crear, para que el botón de guardar esté siempre
+  // disponible (antes quedaba deshabilitado si el nombre estaba vacío y no se
+  // entendía cómo guardar la semana).
+  const [name, setName] = useState(plan?.name ?? 'Mi semana');
   const [assignments, setAssignments] = useState<Record<string, string>>(() =>
     Object.fromEntries(entriesToMap(plan?.entries ?? [])),
   );
@@ -167,10 +170,11 @@ export function MealPlanEditorSheet({ open, onClose, plan }: MealPlanEditorSheet
   const missingRows = rows.filter((r) => r.exists && r.missing > 0);
 
   const handleSave = async () => {
-    if (!name.trim()) return;
+    const finalName = name.trim() || 'Mi semana';
     const entries = mapToEntries(new Map(Object.entries(assignments)));
-    if (isEdit) await mealPlanService.update(plan.id, { name, entries });
-    else await mealPlanService.create({ name, entries });
+    if (isEdit) await mealPlanService.update(plan.id, { name: finalName, entries });
+    else await mealPlanService.create({ name: finalName, entries });
+    toast(isEdit ? 'Menú guardado' : 'Menú creado', 'success');
     onClose();
   };
 
@@ -226,8 +230,9 @@ export function MealPlanEditorSheet({ open, onClose, plan }: MealPlanEditorSheet
               Eliminar
             </Button>
           ) : null}
-          <Button onClick={handleSave} disabled={!name.trim()} className="ml-auto">
-            {isEdit ? 'Guardar' : 'Crear'}
+          <Button onClick={handleSave} className="ml-auto">
+            <Check size={18} aria-hidden="true" />
+            {isEdit ? 'Guardar menú' : 'Guardar menú'}
           </Button>
         </div>
       }

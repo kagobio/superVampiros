@@ -39,7 +39,8 @@ export function Stat({ label, value, icon: Icon, tone = 'default', onClick }: St
     </>
   );
 
-  const base = 'block rounded-2xl border border-border bg-surface p-3.5 text-left shadow-soft';
+  const base =
+    'block h-full w-full rounded-2xl border border-border bg-surface p-3.5 text-left shadow-soft';
 
   if (onClick) {
     return (
