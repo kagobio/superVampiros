@@ -1,9 +1,12 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { ArrowLeft, CalendarDays, ChevronRight, Pencil, Sparkles } from 'lucide-react';
+import { ArrowLeft, CalendarDays, ChevronRight, Moon, Pencil, Sparkles, Sun } from 'lucide-react';
 import type { MealPlan } from '@/domain/meal-plan/meal-plan.types';
+import type { Id } from '@/domain/shared/ids';
+import { WEEK_DAYS, entriesToMap, slotKey } from '@/domain/meal-plan/meal-plan.rules';
 import type { GeneratedMenu } from '@/services/meal-plan/suggest-menu.service';
 import { toast } from '@/stores/toast.store';
+import { cn } from '@/lib/cn';
 import { Fab } from '@/components/ui/Fab';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -48,6 +51,13 @@ export function MealPlansPage() {
 
   const itemsInStock = products.filter((p) => p.quantity > 0).map((p) => p.name);
   const favoriteNames = recipes.filter((r) => r.favorite).map((r) => r.name);
+
+  const recipeNameById = useMemo(
+    () => new Map(recipes.map((r) => [r.id, r.name])),
+    [recipes],
+  );
+  // Día de hoy para resaltarlo en la tabla. App: 0 = Lunes … 6 = Domingo.
+  const todayIndex = (new Date().getDay() + 6) % 7;
 
   // La IA devuelve el menú; aquí lo materializamos (recetas + menú) y lo abrimos
   // en el editor para que el usuario lo revise y ajuste.
@@ -113,29 +123,32 @@ export function MealPlansPage() {
           }
         />
       ) : (
-        <ul className="space-y-2">
+        <ul className="space-y-2.5">
           {plans.map((plan) => (
             <li key={plan.id}>
               <button
                 type="button"
                 onClick={() => openEditor(plan)}
-                className="group flex w-full items-center gap-3 rounded-2xl border border-border bg-surface p-3 text-left shadow-soft transition-[transform,background-color,border-color] hover:border-primary/30 hover:bg-surface-2 active:scale-[0.99] motion-reduce:active:scale-100"
+                className="group block w-full rounded-2xl border border-border bg-surface p-3 text-left shadow-soft transition-[transform,border-color] hover:border-primary/30 active:scale-[0.99] motion-reduce:active:scale-100"
               >
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                  <CalendarDays size={18} aria-hidden="true" />
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate font-semibold text-text">{plan.name}</span>
-                  <span className="mt-0.5 block text-xs text-muted">
-                    {plan.entries.length} comida{plan.entries.length === 1 ? '' : 's'} planificada
-                    {plan.entries.length === 1 ? '' : 's'}
+                <span className="flex items-center gap-3">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                    <CalendarDays size={18} aria-hidden="true" />
                   </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate font-semibold text-text">{plan.name}</span>
+                    <span className="mt-0.5 block text-xs text-muted">
+                      {plan.entries.length} comida{plan.entries.length === 1 ? '' : 's'} planificada
+                      {plan.entries.length === 1 ? '' : 's'}
+                    </span>
+                  </span>
+                  <ChevronRight
+                    size={18}
+                    aria-hidden="true"
+                    className="shrink-0 text-muted/60 transition-transform group-hover:translate-x-0.5"
+                  />
                 </span>
-                <ChevronRight
-                  size={18}
-                  aria-hidden="true"
-                  className="shrink-0 text-muted/60 transition-transform group-hover:translate-x-0.5"
-                />
+                <WeekCalendar plan={plan} recipeNameById={recipeNameById} todayIndex={todayIndex} />
               </button>
             </li>
           ))}
@@ -159,6 +172,77 @@ export function MealPlansPage() {
         onClose={() => setSheetOpen(false)}
         plan={editing}
       />
+    </div>
+  );
+}
+
+interface WeekCalendarProps {
+  plan: MealPlan;
+  recipeNameById: Map<Id, string>;
+  todayIndex: number;
+}
+
+/**
+ * Calendario de un menú: una casilla por día (estilo cuadrícula semanal) con
+ * la comida y la cena dentro, para ver toda la semana de un vistazo sin abrir
+ * el editor. Resalta el día de hoy. Domingo ocupa el ancho completo para que
+ * la cuadrícula quede equilibrada. Solo texto (va dentro del botón de la
+ * tarjeta, que abre el editor).
+ */
+function WeekCalendar({ plan, recipeNameById, todayIndex }: WeekCalendarProps) {
+  const byKey = entriesToMap(plan.entries);
+  const nameAt = (day: number, slot: 'lunch' | 'dinner') => {
+    const id = byKey.get(slotKey(day, slot));
+    return id ? (recipeNameById.get(id) ?? null) : null;
+  };
+
+  const empty = <span className="text-muted/50">—</span>;
+
+  return (
+    <div className="mt-3 grid grid-cols-2 gap-2">
+      {WEEK_DAYS.map((dayLabel, day) => {
+        const isToday = day === todayIndex;
+        const lunch = nameAt(day, 'lunch');
+        const dinner = nameAt(day, 'dinner');
+        return (
+          <div
+            key={dayLabel}
+            className={cn(
+              'flex flex-col rounded-xl border p-2.5',
+              day === WEEK_DAYS.length - 1 && 'col-span-2',
+              isToday
+                ? 'border-primary/40 bg-gradient-to-br from-primary/[0.08] to-primary/[0.02] ring-1 ring-primary/20'
+                : 'border-border bg-surface-2/30',
+            )}
+          >
+            <div className="mb-1.5 flex items-center justify-between gap-1">
+              <span
+                className={cn(
+                  'text-[0.68rem] font-bold uppercase tracking-wide',
+                  isToday ? 'text-primary' : 'text-muted',
+                )}
+              >
+                {dayLabel}
+              </span>
+              {isToday ? (
+                <span className="rounded-full bg-primary px-1.5 py-0.5 text-[0.55rem] font-bold uppercase tracking-wide text-primary-fg">
+                  Hoy
+                </span>
+              ) : null}
+            </div>
+            <div className="space-y-1">
+              <div className="flex items-start gap-1.5">
+                <Sun size={12} aria-hidden="true" className="mt-0.5 shrink-0 text-muted" />
+                <span className="text-xs leading-snug text-text">{lunch ?? empty}</span>
+              </div>
+              <div className="flex items-start gap-1.5">
+                <Moon size={12} aria-hidden="true" className="mt-0.5 shrink-0 text-muted" />
+                <span className="text-xs leading-snug text-text">{dinner ?? empty}</span>
+              </div>
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }

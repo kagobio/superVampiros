@@ -67,6 +67,10 @@ export function MealPlanEditorSheet({ open, onClose, plan }: MealPlanEditorSheet
 
   const isEdit = plan !== null;
 
+  // Día de hoy para resaltarlo en la semana. App: 0 = Lunes … 6 = Domingo;
+  // JS getDay(): 0 = Domingo, por eso (getDay + 6) % 7.
+  const todayIndex = (new Date().getDay() + 6) % 7;
+
   const setSlot = (day: number, slot: MealSlot, recipeId: string) => {
     setAssignments((prev) => {
       const next = { ...prev };
@@ -272,37 +276,62 @@ export function MealPlanEditorSheet({ open, onClose, plan }: MealPlanEditorSheet
               Rellenar huecos con comidas habituales
             </Button>
           ) : null}
-          <div className="space-y-2">
-            {WEEK_DAYS.map((dayLabel, day) => (
-              <div
-                key={dayLabel}
-                className="overflow-hidden rounded-2xl border border-border bg-surface shadow-soft"
-              >
-                <p className="border-b border-border bg-surface-2/50 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-muted">
-                  {dayLabel}
-                </p>
-                <div className="divide-y divide-border">
-                  {MEAL_SLOTS.map(({ slot, label }) => {
-                    const key = slotKey(day, slot);
-                    return (
-                      <SlotPicker
-                        key={slot}
-                        day={day}
-                        slot={slot}
-                        label={label}
-                        dayLabel={dayLabel}
-                        value={assignments[key] ?? ''}
-                        recipes={recipes}
-                        open={openSlot === key}
-                        onOpenChange={(o) => setOpenSlot(o ? key : null)}
-                        onChange={setSlot}
-                        onCreateDish={createDish}
-                      />
-                    );
-                  })}
+          <div className="space-y-2.5">
+            {WEEK_DAYS.map((dayLabel, day) => {
+              const isToday = day === todayIndex;
+              return (
+                <div
+                  key={dayLabel}
+                  className={cn(
+                    'overflow-hidden rounded-2xl border shadow-soft transition-colors',
+                    isToday
+                      ? 'border-primary/40 bg-gradient-to-br from-primary/[0.07] to-primary/[0.02] ring-1 ring-primary/20'
+                      : 'border-border bg-surface',
+                  )}
+                >
+                  <div
+                    className={cn(
+                      'flex items-center justify-between gap-2 border-b px-3 py-2',
+                      isToday ? 'border-primary/20 bg-primary/[0.06]' : 'border-border bg-surface-2/50',
+                    )}
+                  >
+                    <p
+                      className={cn(
+                        'text-xs font-semibold uppercase tracking-wide',
+                        isToday ? 'text-primary' : 'text-muted',
+                      )}
+                    >
+                      {dayLabel}
+                    </p>
+                    {isToday ? (
+                      <span className="rounded-full bg-primary px-2 py-0.5 text-[0.65rem] font-bold uppercase tracking-wide text-primary-fg shadow-glow">
+                        Hoy
+                      </span>
+                    ) : null}
+                  </div>
+                  <div className="divide-y divide-border">
+                    {MEAL_SLOTS.map(({ slot, label }) => {
+                      const key = slotKey(day, slot);
+                      return (
+                        <SlotPicker
+                          key={slot}
+                          day={day}
+                          slot={slot}
+                          label={label}
+                          dayLabel={dayLabel}
+                          value={assignments[key] ?? ''}
+                          recipes={recipes}
+                          open={openSlot === key}
+                          onOpenChange={(o) => setOpenSlot(o ? key : null)}
+                          onChange={setSlot}
+                          onCreateDish={createDish}
+                        />
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
         {/* Ingredientes necesarios */}
