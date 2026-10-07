@@ -44,6 +44,42 @@ export function mapToEntries(map: Map<string, Id>): MealPlanEntry[] {
   return entries;
 }
 
+/**
+ * Rellena los huecos vacíos del menú con las recetas favoritas (comidas
+ * habituales), recorriéndolas en orden y evitando repetir la misma en dos
+ * huecos seguidos cuando hay más de una. Los huecos ya ocupados no se tocan.
+ * Función pura: devuelve un mapa nuevo `slotKey → recipeId`.
+ */
+export function fillSlotsWithFavorites(
+  current: Map<string, Id>,
+  favoriteIds: Id[],
+): Map<string, Id> {
+  const next = new Map(current);
+  if (favoriteIds.length === 0) return next;
+
+  let cursor = 0;
+  let last: Id | null = null;
+  for (let day = 0; day < WEEK_DAYS.length; day++) {
+    for (const { slot } of MEAL_SLOTS) {
+      const key = slotKey(day, slot);
+      const occupied = next.get(key);
+      if (occupied) {
+        last = occupied;
+        continue;
+      }
+      let pick = favoriteIds[cursor % favoriteIds.length] as Id;
+      if (favoriteIds.length > 1 && pick === last) {
+        cursor += 1;
+        pick = favoriteIds[cursor % favoriteIds.length] as Id;
+      }
+      next.set(key, pick);
+      last = pick;
+      cursor += 1;
+    }
+  }
+  return next;
+}
+
 /** Ingrediente agregado del menú (suma de todas las recetas planificadas). */
 export interface AggregatedIngredient {
   productId: Id;

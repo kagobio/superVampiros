@@ -10,6 +10,8 @@ interface MealPlanGeneratorSheetProps {
   onClose: () => void;
   /** Nombres de productos en stock (contexto para la IA). */
   items: string[];
+  /** Comidas habituales (recetas favoritas) a priorizar en el menú. */
+  favorites: string[];
   /** Se llama con el menú generado; el padre crea recetas + menú y lo abre. */
   onGenerated: (menu: GeneratedMenu) => Promise<void> | void;
 }
@@ -29,6 +31,7 @@ export function MealPlanGeneratorSheet({
   open,
   onClose,
   items,
+  favorites,
   onGenerated,
 }: MealPlanGeneratorSheetProps) {
   const [preferences, setPreferences] = useState('');
@@ -51,7 +54,7 @@ export function MealPlanGeneratorSheet({
     setError(null);
     setLoading(true);
     try {
-      const menu = await generateMenu(items, preferences);
+      const menu = await generateMenu(items, preferences, favorites);
       if (menu.comidas.length === 0) {
         setError(
           'La IA no propuso ningún plato. Prueba a describir tus preferencias de otra forma.',
@@ -118,6 +121,12 @@ export function MealPlanGeneratorSheet({
             </button>
           ))}
         </div>
+
+        {favorites.length > 0 ? (
+          <p className="rounded-xl border border-primary/20 bg-primary/5 p-3 text-xs text-text">
+            Priorizaré tus comidas habituales ({favorites.length}) y las repartiré por la semana.
+          </p>
+        ) : null}
 
         {items.length === 0 ? (
           <p className="rounded-xl border border-border bg-surface-2 p-3 text-xs text-muted">

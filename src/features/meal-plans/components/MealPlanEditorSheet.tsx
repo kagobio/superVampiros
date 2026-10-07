@@ -1,11 +1,12 @@
 import { useMemo, useState } from 'react';
-import { Check, Copy, Moon, ShoppingCart, Sun, Trash2, UtensilsCrossed, X } from 'lucide-react';
+import { Check, Copy, Moon, ShoppingCart, Star, Sun, Trash2, UtensilsCrossed, X } from 'lucide-react';
 import type { MealPlan, MealSlot } from '@/domain/meal-plan/meal-plan.types';
 import {
   MEAL_SLOTS,
   WEEK_DAYS,
   aggregatePlanIngredients,
   entriesToMap,
+  fillSlotsWithFavorites,
   mapToEntries,
   slotKey,
 } from '@/domain/meal-plan/meal-plan.rules';
@@ -82,6 +83,25 @@ export function MealPlanEditorSheet({ open, onClose, plan }: MealPlanEditorSheet
       });
     }
     return ctx;
+  };
+
+  const favoriteRecipes = useMemo(() => recipes.filter((r) => r.favorite), [recipes]);
+
+  // Rellena de un toque los huecos vacíos de la semana con las comidas
+  // habituales (favoritas), sin tocar lo ya asignado.
+  const fillWithFavorites = () => {
+    if (favoriteRecipes.length === 0) {
+      toast('Marca alguna receta como comida habitual primero', 'default');
+      return;
+    }
+    setAssignments((prev) => {
+      const filled = fillSlotsWithFavorites(
+        new Map(Object.entries(prev)),
+        favoriteRecipes.map((r) => r.id),
+      );
+      return Object.fromEntries(filled);
+    });
+    toast('Huecos vacíos rellenados con tus comidas habituales', 'success');
   };
 
   // Aplica a la tabla los cambios resueltos por el chat de IA.
@@ -224,6 +244,12 @@ export function MealPlanEditorSheet({ open, onClose, plan }: MealPlanEditorSheet
             <p className="text-sm font-medium text-text">Menú de la semana</p>
             <span className="text-xs text-muted">Elige receta o escribe un plato</span>
           </div>
+          {favoriteRecipes.length > 0 ? (
+            <Button variant="secondary" className="mb-2 w-full" onClick={fillWithFavorites}>
+              <Star size={16} aria-hidden="true" />
+              Rellenar huecos con comidas habituales
+            </Button>
+          ) : null}
           <div className="overflow-hidden rounded-2xl border border-border bg-surface shadow-soft">
             <div className="grid grid-cols-[2.75rem_1fr_1fr] gap-1.5 border-b border-border bg-surface-2/60 px-2.5 py-2 text-[0.7rem] font-semibold uppercase tracking-wide text-muted">
               <span />
@@ -320,11 +346,17 @@ export function MealPlanEditorSheet({ open, onClose, plan }: MealPlanEditorSheet
   );
 }
 
+interface SlotRecipe {
+  id: string;
+  name: string;
+  favorite?: boolean;
+}
+
 interface DayRowProps {
   dayLabel: string;
   day: number;
   assignments: Record<string, string>;
-  recipes: { id: string; name: string }[];
+  recipes: SlotRecipe[];
   onChange: (day: number, slot: MealSlot, recipeId: string) => void;
   onCreateDish: (day: number, slot: MealSlot, name: string) => void | Promise<void>;
 }
@@ -361,7 +393,7 @@ interface SlotPickerProps {
   label: string;
   dayLabel: string;
   value: string;
-  recipes: { id: string; name: string }[];
+  recipes: SlotRecipe[];
   onChange: (day: number, slot: MealSlot, recipeId: string) => void;
   onCreateDish: (day: number, slot: MealSlot, name: string) => void | Promise<void>;
 }
@@ -384,6 +416,8 @@ function SlotPicker({
   const [adding, setAdding] = useState(false);
   const [draft, setDraft] = useState('');
   const filled = Boolean(value);
+  const favorites = recipes.filter((r) => r.favorite);
+  const others = recipes.filter((r) => !r.favorite);
   // Si el valor aún no está en la lista (receta recién creada), lo mostramos
   // igualmente para que el select no quede en blanco mientras se refresca.
   const known = !value || recipes.some((r) => r.id === value);
@@ -447,11 +481,24 @@ function SlotPicker({
     >
       <option value="">—</option>
       {!known ? <option value={value}>Plato nuevo…</option> : null}
-      {recipes.map((r) => (
-        <option key={r.id} value={r.id}>
-          {r.name}
-        </option>
-      ))}
+      {favorites.length > 0 ? (
+        <optgroup label="⭐ Comidas habituales">
+          {favorites.map((r) => (
+            <option key={r.id} value={r.id}>
+              {r.name}
+            </option>
+          ))}
+        </optgroup>
+      ) : null}
+      {others.length > 0 ? (
+        <optgroup label={favorites.length > 0 ? 'Otras recetas' : 'Recetas'}>
+          {others.map((r) => (
+            <option key={r.id} value={r.id}>
+              {r.name}
+            </option>
+          ))}
+        </optgroup>
+      ) : null}
       <option value={NEW_DISH}>➕ Nuevo plato…</option>
     </Select>
   );

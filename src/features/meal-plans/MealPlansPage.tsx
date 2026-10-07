@@ -8,6 +8,7 @@ import { Fab } from '@/components/ui/Fab';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { useProducts } from '@/features/inventory/hooks/useProducts';
+import { useRecipes } from '@/features/recipes/hooks/useRecipes';
 import { useMealPlans } from './hooks/useMealPlans';
 import { MealPlanEditorSheet } from './components/MealPlanEditorSheet';
 import { MealPlanGeneratorSheet } from './components/MealPlanGeneratorSheet';
@@ -16,6 +17,7 @@ import { createMenuFromGenerated } from './build-from-generated';
 export function MealPlansPage() {
   const plans = useMealPlans();
   const products = useProducts();
+  const recipes = useRecipes();
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editing, setEditing] = useState<MealPlan | null>(null);
   const [openKey, setOpenKey] = useState(0);
@@ -29,11 +31,12 @@ export function MealPlansPage() {
   const openCreate = () => openEditor(null);
 
   const itemsInStock = products.filter((p) => p.quantity > 0).map((p) => p.name);
+  const favoriteNames = recipes.filter((r) => r.favorite).map((r) => r.name);
 
   // La IA devuelve el menú; aquí lo materializamos (recetas + menú) y lo abrimos
   // en el editor para que el usuario lo revise y ajuste.
   const handleGenerated = async (menu: GeneratedMenu) => {
-    const plan = await createMenuFromGenerated(menu, products);
+    const plan = await createMenuFromGenerated(menu, products, recipes);
     setGenOpen(false);
     toast('Menú generado. Revísalo y ajústalo si quieres.', 'success');
     openEditor(plan);
@@ -130,6 +133,7 @@ export function MealPlansPage() {
         open={genOpen}
         onClose={() => setGenOpen(false)}
         items={itemsInStock}
+        favorites={favoriteNames}
         onGenerated={handleGenerated}
       />
 

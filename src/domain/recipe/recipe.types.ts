@@ -17,4 +17,11 @@ export interface Recipe extends Entity {
   description: string;
   servings: number | null;
   ingredients: RecipeIngredient[];
+  /**
+   * Comida habitual marcada como favorita. Las favoritas se priorizan al
+   * generar el menú con IA y aparecen arriba para colocarlas rápido en la
+   * semana. Opcional: las recetas anteriores no lo traen (se tratan como
+   * `false`), por lo que no hace falta migración de Dexie.
+   */
+  favorite?: boolean;
 }

@@ -72,12 +72,18 @@ export function parseMenuResponse(text: string): GeneratedMenu {
 /**
  * Pide a la IA un menú semanal según las preferencias y el inventario.
  * `items` son los nombres de los productos en stock (contexto para la IA).
+ * `favorites` son las comidas habituales de la casa, que la IA prioriza e
+ * intenta incluir (usando su nombre exacto) a lo largo de la semana.
  */
-export async function generateMenu(items: string[], preferences: string): Promise<GeneratedMenu> {
+export async function generateMenu(
+  items: string[],
+  preferences: string,
+  favorites: string[] = [],
+): Promise<GeneratedMenu> {
   const res = await fetch('/.netlify/functions/suggest-menu', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ items, preferences }),
+    body: JSON.stringify({ items, preferences, favorites }),
   });
   if (!res.ok) {
     const body = (await res.json().catch(() => null)) as { error?: string } | null;
