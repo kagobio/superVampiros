@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { loadDemoData } from '@/services/bootstrap/demo-data.service';
 import { useNavigate } from 'react-router-dom';
 import { motion, useReducedMotion } from 'framer-motion';
 import {
@@ -35,6 +36,16 @@ export function DashboardPage() {
   const navigate = useNavigate();
   const reduce = useReducedMotion();
   const [now] = useState(() => Date.now());
+  const [loadingDemo, setLoadingDemo] = useState(false);
+
+  const handleLoadDemo = async () => {
+    setLoadingDemo(true);
+    try {
+      await loadDemoData();
+    } finally {
+      setLoadingDemo(false);
+    }
+  };
 
   const recipes = useRecipes();
   const plans = useMealPlans();
@@ -141,7 +152,14 @@ export function DashboardPage() {
           icon={PackageOpen}
           title="Tu despensa está vacía"
           description="Añade productos en el inventario y aquí verás el resumen de un vistazo."
-          action={<Button onClick={() => navigate('/inventario')}>Ir al inventario</Button>}
+          action={
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              <Button onClick={() => navigate('/inventario')}>Ir al inventario</Button>
+              <Button variant="secondary" disabled={loadingDemo} onClick={handleLoadDemo}>
+                {loadingDemo ? 'Cargando…' : 'Ver con datos de ejemplo'}
+              </Button>
+            </div>
+          }
         />
         {activePlan ? todayCard : null}
       </div>
