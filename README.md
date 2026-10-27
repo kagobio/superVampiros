@@ -1,78 +1,32 @@
 # 🧛 Alimentos Vampíricos
 
-Sistema de gestión de inventario doméstico. **Local-first**, offline, mobile-first
-y pensado para que mantener el inventario al día no cueste ningún esfuerzo:
-_cualquier acción frecuente en menos de 2 segundos_.
+Sistema de gestión de inventario doméstico: sabe en todo momento qué hay, qué falta, qué se acaba, qué caduca y qué comprar. **Local-first, offline, mobile-first e instalable como app (PWA)**: cualquier acción frecuente se hace en menos de 2 segundos.
 
-No es una lista de la compra: sabe en todo momento qué hay, qué falta, qué se
-acaba, qué caduca, qué comprar y qué se consume más.
+**[▶ Demo en vivo](https://kagobio.github.io/supervampiros/)** · los datos se guardan solo en tu navegador.
+
+![Captura del inventario](https://raw.githubusercontent.com/kagobio/kagobio.github.io/main/img/supervampiros.png)
+
+## Características
+
+- Inventario con stock, caducidades (semáforo 🟢🟠🔴), favoritos y escáner de código de barras.
+- Lista de la compra generada desde lo que falta o se agota.
+- Recetas, packs y planificación semanal de menús.
+- Historial de operaciones, estadísticas de consumo y gasto por producto.
+- Sincronización entre dispositivos opcional (Firebase), con outbox y resolución last-write-wins.
+- Sin cuentas ni servidores obligatorios: funciona 100% en local con IndexedDB.
 
 ## Stack
 
-React 19 · Vite · TypeScript (strict) · Tailwind v4 · React Router · Zustand ·
-React Hook Form · Zod · Dexie (IndexedDB) · Framer Motion · Lucide · ULID ·
-TanStack Virtual · PWA · Vitest + Testing Library · ESLint + Prettier.
+React 19 · TypeScript (strict) · Vite · Tailwind v4 · Zustand · React Hook Form + Zod · Dexie (IndexedDB) · Framer Motion · TanStack Virtual · PWA (Workbox) · Vitest + Testing Library
 
 ## Arquitectura
 
-Local-first por capas (UI → Servicios → Dominio puro → Repositorios → Dexie),
-con el historial actuando como log de operaciones (outbox) para una futura
-sincronización sin reescribir. Un único hogar, sin cuentas ni permisos.
+Local-first por capas (UI → Servicios → Dominio puro → Repositorios → Dexie), con el historial actuando como log de operaciones (outbox) para la sincronización.
 
-- **Planificación completa:** ver el plan del proyecto.
-- **Normas de arquitectura y estilo:** [`PROJECT_RULES.md`](./PROJECT_RULES.md).
-- **Backlog priorizado:** [`TASKS.md`](./TASKS.md).
-
-## Scripts
+## Desarrollo
 
 ```bash
-npm run dev          # servidor de desarrollo
-npm run build        # typecheck + build de producción
-npm run preview      # previsualiza el build
-npm run lint         # ESLint
-npm run format       # Prettier (escribe)
-npm run typecheck    # tsc --build
-npm run test         # Vitest (run)
-npm run test:watch   # Vitest (watch)
+npm ci
+npm run dev
+npm test
 ```
-
-## Sincronización entre dispositivos (opcional)
-
-Local-first por defecto. Para compartir el inventario entre varios móviles con
-**tiempo real** mediante **Firebase (Firestore)**, sin cuentas: solo una clave de
-hogar.
-
-1. Crea un proyecto en [console.firebase.google.com](https://console.firebase.google.com).
-2. **Firestore Database → Crear base de datos** (modo producción, la región que quieras).
-3. **Firestore Database → Reglas** → pega [`firebase/firestore.rules`](./firebase/firestore.rules) → **Publicar**.
-4. **Authentication → Sign-in method** → habilita **Anónimo**.
-5. **Configuración del proyecto → Tus apps → Web (`</>`)**: registra una app web y copia
-   los valores de `firebaseConfig` (`apiKey`, `authDomain`, `projectId`, `appId`).
-6. Ponlos en `.env.local` (ver [`.env.example`](./.env.example)) para desarrollo y en
-   **Netlify → Environment variables** para producción.
-7. En la app: **Más → Ajustes → Sincronización**, genera una clave y actívala;
-   introduce la **misma clave** en el otro dispositivo.
-
-El `householdId` es el SHA-256 de la clave (imposible de adivinar). Los datos se
-replican con la política _last-write-wins_ (`updatedAt`/`revision`, tombstones) ya
-usada por importar/exportar.
-
-## Sugerencias de recetas con IA (opcional, gratis)
-
-En **Recetas → «Sugerir recetas con lo que tengo»**, una IA propone recetas con
-tu inventario. Usa **Groq** (capa gratuita, sin tarjeta) a través de una **función
-de Netlify** que mantiene la clave oculta.
-
-1. Consigue una clave gratis en [console.groq.com/keys](https://console.groq.com/keys).
-2. En **Netlify → Environment variables**, añade `GROQ_API_KEY` (⚠️ **sin** el
-   prefijo `VITE_`: es de servidor, no debe llegar al navegador).
-3. Redespliega. La función serverless está en `netlify/functions/suggest-recipes.mjs`.
-   El modelo se puede cambiar con `GROQ_MODEL` (por defecto `openai/gpt-oss-120b`).
-
-Sin la clave, la app funciona igual; solo esa sugerencia mostrará un aviso de que
-no está configurada.
-
-## Estado
-
-**Fases 0–6 completadas** + **sincronización (Fase 7)** con Firebase/Firestore en
-tiempo real. Ver [`TASKS.md`](./TASKS.md) para el detalle por fases.
